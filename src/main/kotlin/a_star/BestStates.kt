@@ -12,6 +12,7 @@ import me.emaryllis.utils.Debug.getStackInfo
  * - Guards against invalid moves and redundant expansions.
  *
  * - Time & space complexity: See [getBestStates].
+ *
  * @see getBestStates
  */
 class BestStates {
@@ -23,8 +24,8 @@ class BestStates {
 	 * - Lets the priority queue handle ordering; no beam narrowing.
 	 *
 	 * - Time complexity: O(m * f) -> m = [allowedMoves]'s size, f = [applyMoveIfValid].
-	 *
 	 * - Space complexity: O(m) -> output of [Stack] size
+	 *
 	 * @see Stack
 	 * @see applyMoveIfValid
 	 */
@@ -65,9 +66,9 @@ class BestStates {
 	 * Applies a move to a clone of the original stack if valid.
 	 * - Recomputes heuristic after move and after conditional swaps.
 	 * - Returns null if move is invalid or heuristic < 0.
-	 * - Time: O(f), f = cost of [Stack.clone] + [Stack.apply] + [MixedHeuristic] + [conditionalOptimize].
+	 * - Time complexity: O(f), f = cost of [Stack.clone] + [Stack.apply] + [MixedHeuristic] + [conditionalOptimize].
+	 * - Space complexity: O(m) -> m = [Stack.clone]'s size.
 	 *
-	 * - Space: O(m) -> m = [Stack.clone]'s size.
 	 * @see Stack.clone
 	 * @see Stack.apply
 	 * @see MixedHeuristic

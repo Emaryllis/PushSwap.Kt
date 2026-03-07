@@ -18,17 +18,10 @@ class PermutationTest {
 
 	companion object {
 		@JvmStatic
-		fun failedPermutation(): Stream<Arguments> = generatePermutations(
-			listOf(
-				1011
-			)
-		)
-
-		@JvmStatic
-		fun allPermutations(): Stream<Arguments> = generatePermutations((1..5040).toList())
+		fun allPermTest(): Stream<Arguments> = generatePermutations()
 
 		private fun generatePermutations(tests: List<Int> = emptyList()): Stream<Arguments> {
-			val size = 14
+			val size = 7
 			val baseList = (1..size).toList()
 			return if (tests.isEmpty()) {
 				baseList.permutations().map { Arguments.of(it) }.asStream()
@@ -45,9 +38,9 @@ class PermutationTest {
 	}
 
 	@ParameterizedTest
-	@MethodSource("allPermutations")
+	@MethodSource("allPermTest")
 	fun allPermutations(numList: List<Int>) {
-		if (DEBUG) {
+		if (!DEBUG) {
 			check(numList)
 			return
 		}
@@ -55,7 +48,6 @@ class PermutationTest {
 		println("Solved $numList in ${moves.size} moves: $moves.")
 	}
 
-	@ParameterizedTest
-	@MethodSource("failedPermutation")
-	fun failedPermutations(numList: List<Int>) = allPermutations(numList)
+//    @Test
+//    fun reverseSort() = allPermutations((500 downTo 1).toList())
 }

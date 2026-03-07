@@ -16,7 +16,6 @@ class MixedHeuristic {
 	 * 7. Selects the next minimal move cost.
 	 *
 	 * Time complexity: O(n²) -> n = max(m, k), m = A's size, k = B's size (Due to [prefixInversions])
-	 *
 	 * Space complexity: O(1) ([Int]'s size is constant)
 	 */
 	fun calculate(stack: Stack): Int {
@@ -36,7 +35,6 @@ class MixedHeuristic {
 	 * - Stop at the first element that breaks these conditions.
 	 *
 	 * Time Complexity: O(min(m, c)) -> m = A's size, c = chunk size. (For most cases, it's [MAX_CHUNK_SIZE])
-	 *
 	 * Space Complexity: O(1)
 	 *
 	 * @return Length of the contiguous ascending prefix of chunk elements in stack A.
@@ -60,7 +58,6 @@ class MixedHeuristic {
 	 * of chunk elements at the top of stack A.
 	 *
 	 * Time Complexity: O(p²) -> p = prefixLen [contiguousAscendingPrefixLen]
-	 *
 	 * Space Complexity: O(1)
 	 *
 	 * @return Total inversions, where an inversion is a pair of elements in the
@@ -82,7 +79,6 @@ class MixedHeuristic {
 	 * Only considers elements that are part of the current chunk.
 	 *
 	 * Time Complexity: O(k²) -> k = B's size.
-	 *
 	 * Space Complexity: O(1)
 	 *
 	 * @return Total descending inversions, where a descending
@@ -115,7 +111,6 @@ class MixedHeuristic {
 	 * - Add 1 to account for the push operation itself.
 	 *
 	 * Time Complexity: O((m-p)*k) -> m = A's size, p = prefixLen [contiguousAscendingPrefixLen], k = B's size.
-	 *
 	 * Space Complexity: O(1).
 	 *
 	 * @return The minimal push cost from the smallest candidate value found, or -1 if no valid push candidates exist.
@@ -148,7 +143,6 @@ class MixedHeuristic {
 	 * - Return the smallest candidate cost among all valid elements.
 	 *
 	 * Time Complexity: O(k) -> k = B's size.
-	 *
 	 * Space Complexity: O(1)
 	 */
 	private fun candidatePullCost(stack: Stack, prefixLen: Int): Int {

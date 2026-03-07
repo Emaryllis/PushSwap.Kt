@@ -26,7 +26,6 @@ class CircularBuffer(val capacity: Int, numList: List<Int> = emptyList()) : Coll
 	 * Initializes the buffer with values from the list of integers.
 	 * @throws IllegalArgumentException if the number of integers exceeds the capacity.
 	 */
-
 	init {
 		buffer = IntArray(capacity)
 		if (numList.isNotEmpty()) {
@@ -96,6 +95,7 @@ class CircularBuffer(val capacity: Int, numList: List<Int> = emptyList()) : Coll
 	 * Rotates both buffers to the right.
 	 *
 	 * Time & Space Complexity: O(1)
+	 *
 	 * @param other The other buffer to rotate.
 	 * @return true if both rotations succeed.
 	 */
@@ -105,6 +105,7 @@ class CircularBuffer(val capacity: Int, numList: List<Int> = emptyList()) : Coll
 	 * Pushes the front element of this buffer to the front of [dest].
 	 *
 	 * Time & Space Complexity: O(1)
+	 *
 	 * @param dest Destination buffer to push to.
 	 * @return true if push was performed, false if source is empty or dest is full.
 	 */
@@ -119,6 +120,7 @@ class CircularBuffer(val capacity: Int, numList: List<Int> = emptyList()) : Coll
 
 	/**
 	 * Time & Space Complexity: O(n), n = [capacity].
+	 *
 	 * @return Deep copy of this [buffer].
 	 */
 	public override fun clone(): CircularBuffer {
@@ -130,35 +132,33 @@ class CircularBuffer(val capacity: Int, numList: List<Int> = emptyList()) : Coll
 	}
 
 	/**
-	 * Returns a List view of the buffer's logical contents.
-	 *
 	 * Time & Space Complexity: O(n)
+	 *
+	 * @returns List view of the buffer's logical contents.
 	 */
 	val value: List<Int>
 		get() = List(size) { get(it) }
 
 	/**
-	 * Returns the first element in the buffer.
-	 *
 	 * Time & Space Complexity: O(1)
 	 *
 	 * @throws NoSuchElementException if [isEmpty] (Just as a precaution)
+	 * @returns The first element in the buffer.
 	 */
 	fun first() = if (isEmpty()) throw NoSuchElementException("CircularBuffer is empty.") else get(0)
 
 	/**
-	 * Returns the last element in the buffer.
-	 *
 	 * Time & Space Complexity: O(1)
 	 *
 	 * @throws NoSuchElementException if [isEmpty] (Just as a precaution)
+	 * @returns The last element in the buffer.
 	 */
 	fun last() = if (isEmpty()) throw NoSuchElementException("CircularBuffer is empty.") else get(size - 1)
 
 	/**
 	 * Time Complexity: O(n)
-	 *
 	 * Space Complexity: O(1)
+	 *
 	 * @param element Element to search for.
 	 * @return The logical index of the first occurrence of [element], or -1 if not found.
 	 */
@@ -173,8 +173,8 @@ class CircularBuffer(val capacity: Int, numList: List<Int> = emptyList()) : Coll
 	 * Checks logical equality of buffer contents and size.
 	 *
 	 * Time Complexity: O(n)
-	 *
 	 * Space Complexity: O(1)
+	 *
 	 * @param other Object to compare.
 	 * @return True if [other] is a [CircularBuffer] with the same size and contents, false otherwise.
 	 */
@@ -191,7 +191,6 @@ class CircularBuffer(val capacity: Int, numList: List<Int> = emptyList()) : Coll
 	/**
 	 * Hashes buffer contents and size.
 	 * Time Complexity: O(n)
-	 *
 	 * Space Complexity: O(1)
 	 *
 	 * @return Hash code based on size and contents.
@@ -214,7 +213,6 @@ class CircularBuffer(val capacity: Int, numList: List<Int> = emptyList()) : Coll
 
 	/**
 	 * Time Complexity: O(n)
-	 *
 	 * Space Complexity: O(1)
 	 *
 	 * @return [Iterator] over the buffer's logical contents.
@@ -223,7 +221,6 @@ class CircularBuffer(val capacity: Int, numList: List<Int> = emptyList()) : Coll
 
 	/**
 	 * Time Complexity: O(n)
-	 *
 	 * Space Complexity: O(1)
 	 *
 	 * @param element Element to check.
@@ -233,7 +230,6 @@ class CircularBuffer(val capacity: Int, numList: List<Int> = emptyList()) : Coll
 
 	/**
 	 * Time Complexity: O(n * m), m = [elements]'s size
-	 *
 	 * Space Complexity: O(1)
 	 *
 	 * @param elements Collection of elements to check.

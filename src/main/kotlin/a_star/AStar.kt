@@ -48,8 +48,8 @@ class AStar {
 	 * - Tracks visited states to avoid cycles.
 	 *
 	 * Time complexity: O(S * T), where S = unique states explored, T = See [BestStates.getBestStates]
-	 *
 	 * Space complexity: O(S * n): openList and visited set can each store up to S Stack objects, each using O(n) space.
+	 *
 	 * @return [Stack] that satisfies the goal condition.
 	 * @see BestStates.getBestStates
 	 * @see PriorityQueue
@@ -78,7 +78,6 @@ class AStar {
 	 * - Validates that the block is contiguous and ascending.
 	 *
 	 * Time complexity: O(n) -> n = A's size
-	 *
 	 * Space complexity: O(1)
 	 *
 	 * @return true if [Stack.b] is empty and all of

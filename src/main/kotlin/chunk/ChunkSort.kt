@@ -19,6 +19,7 @@ import java.lang.Integer.min
  * into manageable chunks for A* sorting.
  *
  * Time & Space Complexity: See [chunkSort]
+ *
  * @see chunkSort
  * @See AStar
  */
@@ -65,8 +66,8 @@ class ChunkSort {
 	 * runs A* sort, and prepares for the next chunk.
 	 *
 	 * Time complexity: Sum of [AStar.sort] and [prepareNextChunkHead].
-	 *
 	 * Space complexity: See [AStar.sort].
+	 *
 	 * @return Updated [Stack] after processing the chunk.
 	 * @see AStar.sort
 	 * @see prepareNextChunkHead

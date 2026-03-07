@@ -21,6 +21,7 @@ dependencies {
 	testImplementation("org.junit.platform:junit-platform-suite-api:${project.property("junit_version")}")
 	testRuntimeOnly("org.junit.platform:junit-platform-suite-engine:${project.property("junit_version")}")
 }
+
 tasks {
 	named<JavaCompile>("compileJava") { enabled = false }
 	named<JavaCompile>("compileTestJava") { enabled = false }
@@ -43,7 +44,16 @@ tasks {
 		maxHeapSize = "5G"
 		jvmArgs = listOf("-XX:+UseG1GC")
 	}
+
+	jar {
+		manifest {
+			attributes["Main-Class"] = "me.emaryllis.MainKt"
+		}
+		from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+		duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	}
 }
+
 kotlin {
 	jvmToolchain(21)
 }

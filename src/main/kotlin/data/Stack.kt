@@ -27,7 +27,8 @@ class Stack(
 		get() = moves.size + heuristic
 
 	/**
-	 * Time & Space Complexity: O(n), n = Sum of A & B's sizes.
+	 * Time & Space Complexity: O(n), n = Sum of A & B's sizes
+	 *
 	 * @return A deep copy of all Stack data.
 	 */
 	public override fun clone(): Stack = Stack(
@@ -47,8 +48,8 @@ class Stack(
 	 * error if [log] is true and [DEBUG] is enabled.
 	 *
 	 * Time Complexity: O(1) (amortized, except for resizing of [moves] by [PackedMoveList]).
-	 *
 	 * Space Complexity: O(1) for mutation, O(m) for history -> m = [moves]'s size.
+	 *
 	 * @param move The move to apply.
 	 * @param log Whether to log invalid moves (default true).
 	 * @return true if the move was successfully applied, false otherwise.
@@ -96,15 +97,15 @@ class Stack(
 	 * move history size, and heuristic.
 	 *
 	 * Time Complexity: O(n), n = stack size
-	 *
 	 * Space Complexity: O(1)
+	 *
 	 * @param other Object to compare.
 	 * @return True if stacks are logically equal, false otherwise.
 	 */
 	override fun equals(other: Any?): Boolean {
 		if (this === other) return true
 		if (other !is Stack) return false
-		return hashCode() == other.hashCode() && moves.size == other.moves.size && heuristic == other.heuristic
+		return hashCode() == other.hashCode()
 	}
 
 	/**
@@ -112,12 +113,13 @@ class Stack(
 	 * Purpose: Enables fast lookup and deduplication in hash-based collections.
 	 *
 	 * Time Complexity: O(n), n = stack size
-	 *
 	 * Space Complexity: O(1)
 	 *
 	 * @return Hash code based on both buffers.
 	 */
 	override fun hashCode(): Int {
-		return HASH_PRIME * a.hashCode() + b.hashCode()
+		var result = a.hashCode()
+		result = HASH_PRIME * result + b.hashCode()
+		return result
 	}
 }

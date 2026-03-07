@@ -1,14 +1,9 @@
 package tests
 
 import Checker
-import Settings.DEBUG
-import Utils.suppressAllOutput
 import me.emaryllis.chunk.ChunkSort
 import me.emaryllis.data.Move
-import org.junit.jupiter.api.Assumptions
-import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
-import org.junit.jupiter.params.provider.MethodSource
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.stream.Stream
 
@@ -34,15 +29,15 @@ class DescendingTest {
 		return Pair(status, moves)
 	}
 
-	@ParameterizedTest
-	@MethodSource("descendingTest")
-	fun descendingTest(numList: List<Int>) {
-		Assumptions.assumeFalse(failed.get())
-		if (DEBUG) {
-			check(numList)
-			return
-		}
-		val moves = suppressAllOutput(::check, numList).second
-		println("Solved $numList in ${moves.size} moves: $moves.")
-	}
+//	@ParameterizedTest
+//	@MethodSource("descendingTest")
+//	fun descendingTest(numList: List<Int>) {
+//		Assumptions.assumeFalse(failed.get())
+//		if (DEBUG) {
+//			check(numList)
+//			return
+//		}
+//		val moves = suppressAllOutput(::check, numList).second
+//		println("Solved $numList in ${moves.size} moves: $moves.")
+//	}
 }

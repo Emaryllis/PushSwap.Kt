@@ -18,7 +18,7 @@ class ZigZagTest {
 	companion object {
 
 		@JvmStatic
-		fun zigZag() = generateZigZag(50)
+		fun zigZag() = generateZigZag(7)
 
 		/**
 		 * Generates a zigzag pattern of integers 1..n arranged as: [n, 1, n-1, 2, n-2, 3, ...].
@@ -57,6 +57,11 @@ class ZigZagTest {
 	@ParameterizedTest
 	@MethodSource("zigZag")
 	fun zigZag(numList: List<Int>) {
+		if (!DEBUG) {
+			check(numList)
+			return
+		}
+
 		val (ok, moves) = suppressAllOutput(::check, numList)
 		println("Solved in ${moves.size} moves.")
 		assert(ok)

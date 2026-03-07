@@ -26,6 +26,7 @@ class PriorityQueue {
 
 	/**
 	 * Time & Space Complexity: O(1)
+	 *
 	 * @return true if the [heap] is not empty.
 	 */
 	fun isNotEmpty(): Boolean = heap.isNotEmpty()
@@ -34,8 +35,8 @@ class PriorityQueue {
 	 * Adds a [Stack] to the [heap] and restores heap order.
 	 *
 	 * Time Complexity: O(log n) -> n = [heap]'s size.
-	 *
 	 * Space Complexity: O(1)
+	 *
 	 * @param element The Stack to add.
 	 */
 	fun push(element: Stack) {
@@ -49,8 +50,8 @@ class PriorityQueue {
 	 * new root down the tree until the heap order is correct.
 	 *
 	 * Time Complexity: O(log n) -> n = [heap]'s size.
-	 *
 	 * Space Complexity: O(1)
+	 *
 	 * @return The minimum-cost [Stack] from the heap.
 	 */
 	fun pop(): Stack {
@@ -69,7 +70,6 @@ class PriorityQueue {
 	 * Used in the [push] operation.
 	 *
 	 * Time Complexity: O(log n) -> n = [heap]'s size.
-	 *
 	 * Space Complexity: O(1)
 	 */
 	private fun siftUp(index: Int) {
@@ -89,7 +89,6 @@ class PriorityQueue {
 	 * Used in the [pop] operation.
 	 *
 	 * Time Complexity: O(log n) -> n = [heap]'s size.
-	 *
 	 * Space Complexity: O(1)
 	 */
 	@Suppress("SameParameterValue")

@@ -5,7 +5,7 @@ import me.emaryllis.utils.Utils.hasDuplicates
 
 /**
  * Processes a list of strings, converting each to an integer.
- * If it encounters a non-integer string, it returns false.
+ * If it encounters a noninteger string, it returns false.
  * If all strings are valid integers, it returns true.
  */
 fun processNumList(strNumList: List<String>): Pair<Boolean, List<Int>> {
@@ -21,7 +21,7 @@ fun processNumList(strNumList: List<String>): Pair<Boolean, List<Int>> {
  * If no parameters are specified, the program must not display anything and should
  * return to the prompt.
  *
- * In case of error, it must display "Error" followed by an ’\n’ on the standard error.
+ * In case of error, it must display "Error" followed by an '\n' on the standard error.
  * Errors include, for example: some arguments not being integers, some arguments
  * exceeding the integer limits, and/or the presence of duplicates.
  */
@@ -30,10 +30,11 @@ fun main(strNumList: Array<String>) {
 	val parsed: Pair<Boolean, List<Int>> = if (strNumList.size == 1) {
 		processNumList(strNumList[0].split(" "))
 	} else {
-		processNumList(strNumList.drop(1))
+		processNumList(strNumList.toList())
 	}
 	if (!parsed.first) {
 		return System.err.println("Error")
 	}
-	ChunkSort().chunkSort(parsed.second)
+	val moves = ChunkSort().chunkSort(parsed.second)
+	println(moves.joinToString("\n"))
 }

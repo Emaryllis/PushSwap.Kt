@@ -10,6 +10,7 @@ import kotlin.math.log2
  * Stores a list of [Move] as a bit-packed array (4 bits per move, up to 16 moves per Long).
  *
  * Time & Space Complexity: See individual methods.
+ *
  * @property BITS_PER_MOVE Number of bits used to store each move (4 bits for up to 16 possible moves).
  * @property MOVES_PER_LONG Number of moves that can be stored in a single Long (16 moves).
  * @property MOVE_MASK Bitmask to extract a single move from a Long (0xF).
@@ -42,9 +43,8 @@ class PackedMoveList private constructor(
 	 * grow, it is copied to a larger [LongArray].
 	 *
 	 * Time Complexity: O(1) (amortized, worse case O(n) when resizing).
-	 *
 	 * Space Complexity: O(n / 16) -> n = number of moves.
-	 * @property bitIdx The bit offset within the [Long] where the [Move] will be stored.
+	 *
 	 * @param move The move to add.
 	 * @return A new [PackedMoveList] with the move added.
 	 */
@@ -67,9 +67,8 @@ class PackedMoveList private constructor(
 	 * This process is repeated for all moves in the list.
 	 *
 	 * Time Complexity: O(n) -> n = [size].
-	 *
 	 * Space Complexity: O(n)
-	 * @property bitIdx The bit offset within the Long where the move is stored.
+	 *
 	 * @return An ordered List containing all moves.
 	 */
 	fun toList(): List<Move> {
@@ -85,8 +84,8 @@ class PackedMoveList private constructor(
 
 	/**
 	 * Time Complexity: O(n) -> n = [size].
-	 *
 	 * Space Complexity: O(n / 16)
+	 *
 	 * @return A deep copy of [data].
 	 */
 	public override fun clone(): PackedMoveList = PackedMoveList(data.copyOf(), size)
@@ -99,8 +98,8 @@ class PackedMoveList private constructor(
 	 * to the corresponding [Move] and compared to [element].
 	 *
 	 * Time Complexity: O(n)
-	 *
 	 * Space Complexity: O(1)
+	 *
 	 * @param element The move to search for.
 	 * @return true if [element] is in the packed move list.
 	 */
@@ -116,8 +115,8 @@ class PackedMoveList private constructor(
 
 	/**
 	 * Time Complexity: O(n * m) -> m = [elements]'s size.
-	 *
 	 * Space Complexity: O(1)
+	 *
 	 * @param elements The collection of moves to check for.
 	 * @return true if all [elements] are in [data].
 	 */
@@ -130,6 +129,7 @@ class PackedMoveList private constructor(
 
 	/**
 	 * Time & Space Complexity: O(1)
+	 *
 	 * @return true if the packed move list is empty.
 	 */
 	@Suppress("ReplaceSizeZeroCheckWithIsEmpty")
@@ -143,8 +143,8 @@ class PackedMoveList private constructor(
 	 * mapped back to the corresponding [Move] and returned.
 	 *
 	 * Time Complexity: O(n)
-	 *
 	 * Space Complexity: O(1)
+	 *
 	 * @return An [Iterator] over the packed moves.
 	 */
 	override fun iterator(): Iterator<Move> = object : Iterator<Move> {
