@@ -30,6 +30,8 @@ import java.util.stream.Stream
  * - Arguments out of int range
  */
 class CheckerTest {
+	private val checker = Checker()
+
 	companion object {
 		@JvmStatic
 		fun checkerTest(): Stream<Arguments> = Stream.of(
@@ -74,7 +76,7 @@ class CheckerTest {
 	@Test
 	fun illegalPermutation() {
 		try {
-			Checker(listOf(), listOf(2, 1, 3), listOf(2, 1, 3)).output()
+			checker.output(listOf(), listOf(2, 1, 3), listOf(2, 1, 3))
 			assertTrue(false)
 		} catch (e: IllegalStateException) {
 			assertTrue(true)
@@ -92,7 +94,7 @@ class CheckerTest {
 		try {
 			System.setErr(PrintStream(errContent))
 			System.setOut(PrintStream(outContent))
-			Checker(moves, numList, expectedNumList).output()
+			checker.output(moves, numList, expectedNumList)
 			status = if (expected == "OK\n") {
 				assertTrue(
 					errContent.toString().isEmpty(),

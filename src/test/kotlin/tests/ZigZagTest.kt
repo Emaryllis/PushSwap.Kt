@@ -3,23 +3,17 @@ package tests
 import Checker
 import Settings.DEBUG
 import Utils.suppressAllOutput
+import me.emaryllis.Settings
 import me.emaryllis.chunk.ChunkSort
 import me.emaryllis.data.Move
-import org.junit.jupiter.api.Timeout
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.Arguments
-import org.junit.jupiter.params.provider.MethodSource
-import java.util.concurrent.TimeUnit
-import java.util.stream.Stream
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertTimeoutPreemptively
+import java.time.Duration
 
 class ZigZagTest {
 	private val chunkSort = ChunkSort()
 
 	companion object {
-
-		@JvmStatic
-		fun zigZag() = generateZigZag(7)
-
 		/**
 		 * Generates a zigzag pattern of integers 1..n arranged as: [n, 1, n-1, 2, n-2, 3, ...].
 		 * Example n=7 -> [7, 1, 6, 2, 5, 3, 4]
@@ -27,7 +21,7 @@ class ZigZagTest {
 		 * Time: O(n), Space: O(n).
 		 */
 		@Suppress("SameParameterValue")
-		private fun generateZigZag(n: Int): Stream<Arguments> {
+		private fun generateZigZag(n: Int): List<Int> {
 			require(n > 0) { "n must be greater than 0." }
 			val result = mutableListOf<Int>()
 			var low = 1
@@ -43,27 +37,40 @@ class ZigZagTest {
 				}
 				takeHigh = !takeHigh
 			}
-			return Stream.of(Arguments.of(result.toList()))
+			return result.toList()
 		}
 	}
 
 	private fun check(numList: List<Int>): Pair<Boolean, List<Move>> {
 		val moves = chunkSort.chunkSort(numList)
-		val status = Checker(moves, numList, numList.sorted()).boolOutput()
+		val status = Checker().boolOutput(moves, numList, numList.sorted())
 		return Pair(status, moves)
 	}
 
-	@Timeout(value = 30, unit = TimeUnit.SECONDS)
-	@ParameterizedTest
-	@MethodSource("zigZag")
-	fun zigZag(numList: List<Int>) {
-		if (!DEBUG) {
+	private fun zigZag(n: Int) {
+		val numList = generateZigZag(n)
+		val (ok, moves) = if (DEBUG) {
+			suppressAllOutput(::check, numList)
+		} else {
 			check(numList)
-			return
 		}
-
-		val (ok, moves) = suppressAllOutput(::check, numList)
 		println("Solved in ${moves.size} moves.")
-		assert(ok)
+		assert(ok) { "Expected ${numList.sorted()}.\nGot ${Checker().applyMoves(moves, numList)}.\nMoves: $moves" }
+	}
+
+	@Test
+	fun zigZag2Chunks() {
+		assertTimeoutPreemptively(Duration.ofSeconds(15)) { zigZag(Settings.MAX_CHUNK_SIZE * 2) }
+	}
+
+	@Test
+	fun zigZag100() {
+		assertTimeoutPreemptively(Duration.ofMinutes(3)) { zigZag(100) }
+	}
+
+	@Test
+
+	fun zigZag500() {
+		assertTimeoutPreemptively(Duration.ofMinutes(10)) { zigZag(500) }
 	}
 }

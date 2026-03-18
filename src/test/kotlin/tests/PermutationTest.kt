@@ -12,8 +12,10 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 import kotlin.streams.asStream
+import kotlin.test.Test
 
 class PermutationTest {
+	private val checker = Checker()
 	private val chunkSort = ChunkSort()
 
 	companion object {
@@ -33,7 +35,7 @@ class PermutationTest {
 
 	private fun check(numList: List<Int>): Pair<Boolean, List<Move>> {
 		val moves = chunkSort.chunkSort(numList)
-		val status = Checker(moves, numList, numList.sorted()).boolOutput()
+		val status = checker.boolOutput(moves, numList, numList.sorted())
 		return Pair(status, moves)
 	}
 
@@ -48,6 +50,6 @@ class PermutationTest {
 		println("Solved $numList in ${moves.size} moves: $moves.")
 	}
 
-//    @Test
-//    fun reverseSort() = allPermutations((500 downTo 1).toList())
+	@Test
+	fun reverseSort() = allPermutations((500 downTo 1).toList())
 }

@@ -95,6 +95,8 @@ class AStar {
 				last = stack.a[i]
 				count++
 			} else if (count > 0) {
+				// First element below the chunk block must be prevChunkNum's block
+				if (stack.prevChunkNum != null && stack.a[i] > stack.chunk.minValue) return false
 				break
 			}
 			i++

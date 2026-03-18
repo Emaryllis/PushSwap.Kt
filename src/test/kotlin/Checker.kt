@@ -2,10 +2,8 @@ import Settings.DEBUG
 import me.emaryllis.data.CircularBuffer
 import me.emaryllis.data.Move
 
-class Checker(private val moves: List<Move>, private val numList: List<Int>, private val expectedNumList: List<Int>) {
-	private val a = CircularBuffer(numList.size, numList)
-	private val b = CircularBuffer(numList.size)
-	private val opsMap = mapOf(
+class Checker {
+	private fun getOpsMap(a: CircularBuffer, b: CircularBuffer) = mapOf(
 		Move.SA to { a.swap() },
 		Move.SB to { b.swap() },
 		Move.SS to { a.swap(); b.swap() },
@@ -19,8 +17,10 @@ class Checker(private val moves: List<Move>, private val numList: List<Int>, pri
 		Move.RRR to { a.reverseRotateBoth(b) }
 	)
 
-	private fun checker(): Boolean? {
-		val keys = opsMap.keys
+	private fun checker(moves: List<Move>, numList: List<Int>, expectedNumList: List<Int>): Boolean? {
+		val a = CircularBuffer(numList.size, numList)
+		val b = CircularBuffer(numList.size)
+		val keys = getOpsMap(a, b).keys
 		if (moves.any { it !in keys }) {
 			if (DEBUG) System.err.print("Invalid move found: $moves")
 			return null
@@ -31,7 +31,7 @@ class Checker(private val moves: List<Move>, private val numList: List<Int>, pri
 			else if (expectedNumList != expectedNumList.sorted()) error("This permutation is never possible.")
 		}
 		moves.forEach {
-			if (opsMap[it]?.invoke() != true) {
+			if (getOpsMap(a, b)[it]?.invoke() != true) {
 				if (DEBUG) System.err.print("Failed to execute move: $it. Stack A: ${a.toList()}, Stack B: ${b.toList()}.|")
 				return false
 			}
@@ -47,12 +47,35 @@ class Checker(private val moves: List<Move>, private val numList: List<Int>, pri
 		return status
 	}
 
-	fun boolOutput(): Boolean {
-		return checker() ?: false
+	fun applyMoves(moves: List<Move>, numList: List<Int>): List<Int>? {
+		val a = CircularBuffer(numList.size, numList)
+		val b = CircularBuffer(numList.size)
+		val keys = getOpsMap(a, b).keys
+		if (moves.any { it !in keys }) {
+			if (DEBUG) System.err.print("Invalid move found: $moves")
+			return null
+		}
+		if (numList.size != numList.toSet().size) return null
+		if (moves.isEmpty() && (numList.isEmpty() || numList == numList.sorted())) return numList
+		moves.forEach {
+			if (getOpsMap(a, b)[it]?.invoke() != true) {
+				if (DEBUG) System.err.print("Failed to execute move: $it. Stack A: ${a.toList()}, Stack B: ${b.toList()}.|")
+				return listOf()
+			}
+		}
+		if (b.isNotEmpty()) {
+			if (DEBUG) System.err.print("Stack B is not empty. Size: ${b.size}|")
+			return listOf()
+		}
+		return a.value
 	}
 
-	fun output() {
-		when (checker()) {
+	fun boolOutput(moves: List<Move>, numList: List<Int>, expectedNumList: List<Int>): Boolean {
+		return checker(moves, numList, expectedNumList) ?: false
+	}
+
+	fun output(moves: List<Move>, numList: List<Int>, expectedNumList: List<Int>) {
+		when (checker(moves, numList, expectedNumList)) {
 			null -> System.err.println("Error")
 			true -> println("OK")
 			false -> System.err.println("KO")

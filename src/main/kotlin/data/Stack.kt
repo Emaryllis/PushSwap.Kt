@@ -27,7 +27,7 @@ class Stack(
 		get() = moves.size + heuristic
 
 	/**
-	 * Time & Space Complexity: O(n), n = Sum of A & B's sizes
+	 * Time & Space Complexity: O(n), n = Dataset size
 	 *
 	 * @return A deep copy of all Stack data.
 	 */
@@ -47,7 +47,7 @@ class Stack(
 	 * are executed. (Very dumb) If the move is invalid, logs an
 	 * error if [log] is true and [DEBUG] is enabled.
 	 *
-	 * Time Complexity: O(1) (amortized, except for resizing of [moves] by [PackedMoveList]).
+	 * Time Complexity: O(1) (amortised, except for resizing of [moves] by [PackedMoveList]).
 	 * Space Complexity: O(1) for mutation, O(m) for history -> m = [moves]'s size.
 	 *
 	 * @param move The move to apply.

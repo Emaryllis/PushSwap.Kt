@@ -16,6 +16,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 
 class SmallSortTest {
+	private val checker = Checker()
 	private val smallSort = SmallSort()
 
 	companion object {
@@ -33,14 +34,17 @@ class SmallSortTest {
 			Chunk(0, 0, emptyList()),
 			null
 		)
-		assertTrue(Checker(smallSort.smallSort(stack), numList, numList.sorted()).boolOutput())
+		assertTrue(checker.boolOutput(smallSort.smallSort(stack), numList, numList.sorted()))
 	}
 
 	@ParameterizedTest
 	@MethodSource("smallSort")
 	fun smallSort(numList: List<Int>) {
-		if (DEBUG) return check(numList)
-		suppressAllOutput(::check, numList)
+		if (DEBUG) {
+			suppressAllOutput(::check, numList)
+		} else {
+			check(numList)
+		}
 	}
 
 	@Test
