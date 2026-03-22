@@ -13,7 +13,7 @@ import java.lang.Integer.min
 
 /**
  * ChunkSort divides a list of integer into chunks.
- * If there are only 5 or less integers, it uses SmallSort.
+ * If there are only 5 or less integers, it uses [SmallSort].
  * If not, it sorts each chunk using A* search. ([AStar.sort])
  * Purpose: Efficiently sorts large lists by dividing them
  * into manageable chunks for A* sorting.
@@ -73,6 +73,9 @@ class ChunkSort {
 	 * @see prepareNextChunkHead
 	 */
 	private fun processChunk(i: Int, stack: Stack, chunks: List<Chunk>): Stack {
+		System.gc()
+		val memBean = java.lang.management.ManagementFactory.getMemoryMXBean()
+		val beforeMb = memBean.heapMemoryUsage.used / 1_048_576
 		if (i > 0) stack.prevChunkNum = chunks[i - 1].maxValue
 		stack.chunk = chunks[i]
 		if (DEBUG) println(
@@ -86,6 +89,8 @@ class ChunkSort {
 		if (i + 1 < chunks.size) {
 			prepareNextChunkHead(newStack, chunks[i + 1])
 		}
+		val afterMb = memBean.heapMemoryUsage.used / 1_048_576
+		println("Chunk ${i + 1}: ${afterMb - beforeMb}MB live heap delta, ${newStack.moves.size - oldStack.moves.size} moves")
 		return newStack
 	}
 
@@ -106,15 +111,9 @@ class ChunkSort {
 		val sorted = numList.sorted()
 		val chunkSize = min(MAX_CHUNK_SIZE, sorted.size)
 		val chunks = mutableListOf<Chunk>()
-
-		var startIdx = 0
-		for (i in 0 until (sorted.size + chunkSize - 1) / chunkSize) {
-			val size = min(chunkSize, sorted.size - startIdx)
-			val chunkValues = sorted.subList(startIdx, startIdx + size)
-			val minValue = chunkValues.first()
-			val maxValue = chunkValues.last()
-			chunks.add(Chunk(minValue, maxValue, chunkValues))
-			startIdx += size
+		for (i in sorted.indices step chunkSize) {
+			val chunkValues = sorted.subList(i, min(i + chunkSize, sorted.size))
+			chunks.add(Chunk(chunkValues.first(), chunkValues.last(), chunkValues))
 		}
 		return chunks
 	}
@@ -160,7 +159,7 @@ class ChunkSort {
 	private fun shiftSmallestToTop(stack: Stack, minValue: Int) {
 		val aList = stack.a.value
 		val minIdx = stack.a.indexOf(minValue)
-		if (minIdx == -1) error("$minValue not found in A: ${stack.a.value}") // Debug check
+		if (minIdx == -1) error("$minValue not found in A: ${stack.a.value}")
 		else if (minIdx == 0) return // already at top
 		if (minIdx <= aList.size / 2) {
 			repeat(minIdx) { stack.apply(Move.RA) }

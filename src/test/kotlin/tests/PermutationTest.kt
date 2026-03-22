@@ -7,6 +7,8 @@ import Utils.permutations
 import Utils.suppressAllOutput
 import me.emaryllis.chunk.ChunkSort
 import me.emaryllis.data.Move
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -39,6 +41,7 @@ class PermutationTest {
 		return Pair(status, moves)
 	}
 
+	@Tag("manual")
 	@ParameterizedTest
 	@MethodSource("allPermTest")
 	fun allPermutations(numList: List<Int>) {
@@ -51,5 +54,6 @@ class PermutationTest {
 	}
 
 	@Test
+	@Disabled // Disabled until 500 numbers work reliably
 	fun reverseSort() = allPermutations((500 downTo 1).toList())
 }

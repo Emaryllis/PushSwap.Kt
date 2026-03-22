@@ -8,7 +8,7 @@ import me.emaryllis.utils.Debug.getStackInfo
 /**
  * BestStates generates all valid next states from a given stack and allowed moves.
  * - Uses MixedHeuristic for scoring.
- * - Applies conditional swap optimizations (SS > SA > SB).
+ * - Applies conditional swap optimisations (SS > SA > SB).
  * - Guards against invalid moves and redundant expansions.
  *
  * - Time & space complexity: See [getBestStates].
@@ -19,20 +19,15 @@ class BestStates {
 	private val heuristic = MixedHeuristic()
 
 	/**
-	 * Returns all valid successor states from originalStack using allowedMoves.
-	 * - Applies each move, checks validity, and optimizes with swaps.
-	 * - Lets the priority queue handle ordering; no beam narrowing.
+	 * Applies each move, checks validity, and optimises with swaps.
+	 * Lets the priority queue handle ordering; no beam narrowing.
 	 *
-	 * - Time complexity: O(m * f) -> m = [allowedMoves]'s size, f = [applyMoveIfValid].
-	 * - Space complexity: O(m) -> output of [Stack] size
+	 * Time complexity: O(m * f) -> m = [allowedMoves]'s size, f = [applyMoveIfValid].
+	 * Space complexity: O(m) -> output of [Stack] size
 	 *
-	 * @see Stack
-	 * @see applyMoveIfValid
+	 * @return All valid successor states from originalStack using [allowedMoves].
 	 */
-	fun getBestStates(
-		originalStack: Stack,
-		allowedMoves: List<Move>,
-	): List<Stack> {
+	fun getBestStates(originalStack: Stack, allowedMoves: List<Move>): List<Stack> {
 		val possibleStates = mutableListOf<Stack>()
 		for (move in allowedMoves) {
 			val currentStack = applyMoveIfValid(originalStack, move)
@@ -66,22 +61,17 @@ class BestStates {
 	 * Applies a move to a clone of the original stack if valid.
 	 * - Recomputes heuristic after move and after conditional swaps.
 	 * - Returns null if move is invalid or heuristic < 0.
-	 * - Time complexity: O(f), f = cost of [Stack.clone] + [Stack.apply] + [MixedHeuristic] + [conditionalOptimize].
+	 * - Time complexity: O(f), f = cost of [Stack.clone] + [Stack.apply] + [MixedHeuristic] + [trySwap].
 	 * - Space complexity: O(m) -> m = [Stack.clone]'s size.
 	 *
-	 * @see Stack.clone
-	 * @see Stack.apply
-	 * @see MixedHeuristic
-	 * @see conditionalOptimize
+	 * @return A new [Stack] with the move applied and heuristic calculated, or null if invalid.
 	 */
 	private fun applyMoveIfValid(original: Stack, move: Move): Stack? {
 		if (invalidFast(original, move)) return null
 		val stack = original.clone()
 		if (!stack.apply(move)) return null
+		trySwap(stack)
 		stack.heuristic = heuristic.calculate(stack)
-		if (conditionalOptimize(stack)) {
-			stack.heuristic = heuristic.calculate(stack)
-		}
 		if (stack.heuristic < 0) return null
 		return stack
 	}
@@ -102,7 +92,7 @@ class BestStates {
 	 *
 	 * @return true if a swap was made, false otherwise.
 	 */
-	private fun conditionalOptimize(stack: Stack): Boolean {
+	private fun trySwap(stack: Stack): Boolean {
 		val canSA = canSA(stack)
 		val canSB = stack.b.size >= 2 && stack.b[0] < stack.b[1]
 

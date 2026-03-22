@@ -6,7 +6,7 @@ import Utils.suppressAllOutput
 import me.emaryllis.chunk.ChunkSort
 import me.emaryllis.data.Move
 import org.junit.jupiter.api.Assumptions
-import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -36,7 +36,7 @@ class DescendingTest {
 		return Pair(status, moves)
 	}
 
-	@Disabled
+	@Tag("manual")
 	@ParameterizedTest
 	@MethodSource("descendingTest")
 	fun descendingTest(numList: List<Int>) {

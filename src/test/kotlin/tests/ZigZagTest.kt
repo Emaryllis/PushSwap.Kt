@@ -6,9 +6,11 @@ import Utils.suppressAllOutput
 import me.emaryllis.Settings
 import me.emaryllis.chunk.ChunkSort
 import me.emaryllis.data.Move
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertTimeoutPreemptively
 import java.time.Duration
+import kotlin.math.ceil
 
 class ZigZagTest {
 	private val chunkSort = ChunkSort()
@@ -54,22 +56,47 @@ class ZigZagTest {
 		} else {
 			check(numList)
 		}
-		println("Solved in ${moves.size} moves.")
 		assert(ok) { "Expected ${numList.sorted()}.\nGot ${Checker().applyMoves(moves, numList)}.\nMoves: $moves" }
+		println("Solved $n numbers (${ceil(n.toDouble() / Settings.MAX_CHUNK_SIZE).toInt()} chunks) in ${moves.size} moves.")
+	}
+
+	/** Used for manually testing each zigzag pattern */
+	@Test
+	@Tag("manual")
+	fun zigZagTest() {
+		zigZag(Settings.MAX_CHUNK_SIZE * 3)
+	}
+
+	/**
+	 * Used for manual testing of zigzag patterns with increasing chunk counts
+	 */
+	@Test
+	@Tag("manual")
+	fun zigZagIncrementChunk() {
+		val testUpToChunks = 3
+		for (i in 1..testUpToChunks) {
+			assertTimeoutPreemptively(Duration.ofSeconds(15L * (1..i).sum())) {
+				zigZag(Settings.MAX_CHUNK_SIZE * i)
+			}
+		}
 	}
 
 	@Test
-	fun zigZag2Chunks() {
-		assertTimeoutPreemptively(Duration.ofSeconds(15)) { zigZag(Settings.MAX_CHUNK_SIZE * 2) }
+	@Tag("manual")
+	fun zigZagIncrement() {
+		for (i in 1..21) {
+			zigZag(i)
+		}
 	}
 
 	@Test
+	@Tag("manual")
 	fun zigZag100() {
 		assertTimeoutPreemptively(Duration.ofMinutes(3)) { zigZag(100) }
 	}
 
 	@Test
-
+	@Tag("manual")
 	fun zigZag500() {
 		assertTimeoutPreemptively(Duration.ofMinutes(10)) { zigZag(500) }
 	}

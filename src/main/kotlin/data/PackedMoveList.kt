@@ -16,10 +16,12 @@ import kotlin.math.log2
  * @property MOVE_MASK Bitmask to extract a single move from a Long (0xF).
  * @property data The underlying LongArray storing the packed moves.
  * @property size The number of moves currently stored in the list.
+ * @property last The last move added to the list.
  */
 class PackedMoveList private constructor(
 	private val data: LongArray,
-	override val size: Int
+	override val size: Int,
+	private val last: Move? = null
 ) : Cloneable, Collection<Move> {
 	companion object {
 		private var BITS_PER_MOVE = ceil(log2(Move.entries.size.toDouble())).toInt() // 4 bits for 16 moves
@@ -42,20 +44,49 @@ class PackedMoveList private constructor(
 	 * occupying bits denoted by [BITS_PER_MOVE]. If the needs to
 	 * grow, it is copied to a larger [LongArray].
 	 *
-	 * Time Complexity: O(1) (amortized, worse case O(n) when resizing).
+	 * Time Complexity: O(1) (amortised, worse case O(n) when resizing).
 	 * Space Complexity: O(n / 16) -> n = number of moves.
 	 *
 	 * @param move The move to add.
 	 * @return A new [PackedMoveList] with the move added.
 	 */
 	fun add(move: Move): PackedMoveList {
-		val newSize = size + 1
+		val newArr = allocate(size + 1)
+		writeMoveAt(newArr, size, move.ordinal)
+		return PackedMoveList(newArr, size + 1, move)
+	}
+
+	/**
+	 * Appends all moves from [other] to this list by directly copying bit-packed data.
+	 * Allocates a single new [LongArray] via [allocate] and writes each move via [writeMoveAt].
+	 *
+	 * Time Complexity: O(n) -> n = [other]'s size.
+	 * Space Complexity: O((size + n) / [MOVES_PER_LONG])
+	 *
+	 * @param other The [PackedMoveList] to append.
+	 * @return A new [PackedMoveList] with all moves from this list followed by all moves from [other].
+	 */
+	fun addAll(other: PackedMoveList): PackedMoveList {
+		val newSize = size + other.size
+		val newArr = allocate(newSize)
+		for (i in 0 until other.size) {
+			val srcArrIdx = i / MOVES_PER_LONG
+			val srcBitIdx = (i % MOVES_PER_LONG) * BITS_PER_MOVE
+			val ord = ((other.data[srcArrIdx] shr srcBitIdx) and MOVE_MASK).toInt()
+			writeMoveAt(newArr, size + i, ord)
+		}
+		return PackedMoveList(newArr, newSize, other.last)
+	}
+
+	private fun allocate(newSize: Int): LongArray {
 		val arrLen = (newSize + MOVES_PER_LONG - 1) / MOVES_PER_LONG
-		val newArr = if (arrLen > data.size) data.copyOf(arrLen) else data.copyOf()
-		val arrIdx = size / MOVES_PER_LONG
-		val bitIdx = (size % MOVES_PER_LONG) * BITS_PER_MOVE
-		newArr[arrIdx] = newArr[arrIdx] or (move.ordinal.toLong() shl bitIdx)
-		return PackedMoveList(newArr, newSize)
+		return if (arrLen > data.size) data.copyOf(arrLen) else data.copyOf()
+	}
+
+	private fun writeMoveAt(arr: LongArray, idx: Int, ordinal: Int) {
+		val arrIdx = idx / MOVES_PER_LONG
+		val bitIdx = (idx % MOVES_PER_LONG) * BITS_PER_MOVE
+		arr[arrIdx] = arr[arrIdx] or (ordinal.toLong() shl bitIdx)
 	}
 
 	/**
@@ -88,7 +119,7 @@ class PackedMoveList private constructor(
 	 *
 	 * @return A deep copy of [data].
 	 */
-	public override fun clone(): PackedMoveList = PackedMoveList(data.copyOf(), size)
+	public override fun clone(): PackedMoveList = PackedMoveList(data.copyOf(), size, last)
 
 	/**
 	 * For each move, the corresponding [Long] is shifted right, so the
@@ -132,11 +163,10 @@ class PackedMoveList private constructor(
 	 *
 	 * @return true if the packed move list is empty.
 	 */
-	@Suppress("ReplaceSizeZeroCheckWithIsEmpty")
 	override fun isEmpty(): Boolean = size == 0 // NOSONAR
 
 	/**
-	 * For each move, the corresponding Long is shifted right,
+	 * For each move, the corresponding [Long] is shifted right,
 	 * so the desired bits are moved to the lowest position.
 	 * [MOVE_MASK] is applied to extract only those bits, which
 	 * represent the move's ordinal value. The ordinal is then
@@ -159,4 +189,6 @@ class PackedMoveList private constructor(
 			return Move.entries[ord]
 		}
 	}
+
+	fun lastOrNull(): Move? = last
 }

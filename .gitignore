@@ -1,6 +1,7 @@
 .gradle/
 build/
 en.subject.pdf
+out/
 
 ### IntelliJ IDEA ###
 *.hprof
@@ -9,5 +10,4 @@ en.subject.pdf
 .kotlin/
 
 ### DEBUG ###
-Old/
-/*Test.xml
+*Test.xml

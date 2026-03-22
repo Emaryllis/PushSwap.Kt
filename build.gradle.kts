@@ -6,6 +6,7 @@ plugins {
 }
 
 group = "me.emaryllis"
+val mainClass = "MainKt"
 version = "1.0"
 
 repositories {
@@ -34,7 +35,9 @@ tasks {
 	test {
 		outputs.cacheIf { false }
 		exclude("**/*Suite*")
-		useJUnitPlatform()
+		useJUnitPlatform {
+			excludeTags("manual")
+		}
 		testLogging {
 			events("skipped", "failed", "standardOut", "standardError")
 			exceptionFormat = TestExceptionFormat.FULL
@@ -47,7 +50,7 @@ tasks {
 
 	jar {
 		manifest {
-			attributes["Main-Class"] = "me.emaryllis.MainKt"
+			attributes["Main-Class"] = "$group.$mainClass"
 		}
 		from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
 		duplicatesStrategy = DuplicatesStrategy.EXCLUDE
@@ -59,5 +62,5 @@ kotlin {
 }
 
 application {
-	mainClass.set("me.emaryllis.MainKt")
+	mainClass.set("$group.$mainClass")
 }

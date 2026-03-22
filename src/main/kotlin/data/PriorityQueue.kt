@@ -1,21 +1,21 @@
 package me.emaryllis.data
 
 /**
- * PriorityQueue is a binary min-heap for [Stack] objects, ordered by their [Stack.currentCost].
+ * PriorityQueue is a binary min-heap for [T] objects, ordered by their [Stack.currentCost].
  *
- * Purpose: Efficiently retrieves and manages the lowest-cost Stack for A* search and related algorithms.
+ * Purpose: Efficiently retrieves and manages the lowest-cost [T] for A* search and related algorithms.
  *
  * Time & Space Complexity: See individual methods.
  */
-class PriorityQueue {
-	private val heap = mutableListOf<Stack>()
+class PriorityQueue<T>(private val cost: (T) -> Int) {
+	private val heap = mutableListOf<T>()
 
 	/**
 	 * Time & Space Complexity: O(n)
 	 *
 	 * Returns An immutable list of the [heap]'s elements.
 	 */
-	val value: List<Stack> get() = heap.toList()
+	val value: List<T> get() = heap.toList()
 
 	/**
 	 * Time & Space Complexity: O(1)
@@ -32,29 +32,29 @@ class PriorityQueue {
 	fun isNotEmpty(): Boolean = heap.isNotEmpty()
 
 	/**
-	 * Adds a [Stack] to the [heap] and restores heap order.
+	 * Adds a [T] to the [heap] and restores heap order.
 	 *
 	 * Time Complexity: O(log n) -> n = [heap]'s size.
 	 * Space Complexity: O(1)
 	 *
-	 * @param element The Stack to add.
+	 * @param element The [T] to add.
 	 */
-	fun push(element: Stack) {
+	fun push(element: T) {
 		heap.add(element)
 		siftUp(heap.lastIndex)
 	}
 
 	/**
-	 * Removes and returns the minimum-cost [Stack] from the [heap].
+	 * Removes and returns the minimum-cost [T] from the [heap].
 	 * After removal, restores the min-heap property by moving the
 	 * new root down the tree until the heap order is correct.
 	 *
 	 * Time Complexity: O(log n) -> n = [heap]'s size.
 	 * Space Complexity: O(1)
 	 *
-	 * @return The minimum-cost [Stack] from the heap.
+	 * @return The minimum-cost [T] from the heap.
 	 */
-	fun pop(): Stack {
+	fun pop(): T {
 		if (heap.isEmpty()) error("Stack is empty")
 		val top = heap.first()
 		val last = heap.removeAt(heap.lastIndex)
@@ -77,7 +77,7 @@ class PriorityQueue {
 		val value = heap[i]
 		while (i > 0) {
 			val parent = (i - 1) / 2
-			if (value.currentCost >= heap[parent].currentCost) break
+			if (cost(value) >= cost(heap[parent])) break
 			heap[i] = heap[parent]
 			i = parent
 		}
@@ -99,10 +99,10 @@ class PriorityQueue {
 			val left = 2 * i + 1
 			val right = 2 * i + 2
 			var smallestChild = left
-			if (right < heap.size && heap[right].currentCost < heap[left].currentCost) {
+			if (right < heap.size && cost(heap[right]) < cost(heap[left])) {
 				smallestChild = right
 			}
-			if (heap[smallestChild].currentCost >= value.currentCost) break
+			if (cost(heap[smallestChild]) >= cost(value)) break
 			heap[i] = heap[smallestChild]
 			i = smallestChild
 		}
