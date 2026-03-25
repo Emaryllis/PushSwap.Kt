@@ -1,10 +1,11 @@
 package me.emaryllis.a_star
 
-import me.emaryllis.Settings.DEBUG
+import me.emaryllis.Settings.CHUNK_DEBUG
+import me.emaryllis.Settings.STACK_DEBUG
 import me.emaryllis.data.Move
 import me.emaryllis.data.PriorityQueue
 import me.emaryllis.data.Stack
-import me.emaryllis.utils.Debug.getStackInfo
+import me.emaryllis.utils.DebugUtils.getStackInfo
 
 /**
  * Implements the A* search algorithm for chunk-based stack sorting.
@@ -35,7 +36,7 @@ class AStar {
 	fun sort(stack: Stack): Stack {
 		var newStack = stack.clone()
 		newStack.heuristic = mixedHeuristic.calculate(newStack)
-		if (DEBUG) println("Starting mixed-mode search: ${getStackInfo(newStack, false)}")
+		if (CHUNK_DEBUG) println("Starting mixed-mode search: ${getStackInfo(newStack, false)}")
 		newStack = aStar(newStack)
 		return newStack
 	}
@@ -65,9 +66,9 @@ class AStar {
 			val current = openList.pop()
 			iteration++
 			if (openList.size > maxOpenListSize) maxOpenListSize = openList.size
-			if (DEBUG) println("\nI:$iteration Size:${openList.size} ${getStackInfo(current)}")
+			if (STACK_DEBUG) println("\nI:$iteration Size:${openList.size} ${getStackInfo(current)}")
 			if (goal(current)) {
-				println("Chunk ${start.chunk.minValue}-${start.chunk.maxValue}: $iteration iterations, peak open list $maxOpenListSize")
+				if (CHUNK_DEBUG) println("Chunk ${start.chunk.minValue}-${start.chunk.maxValue}: $iteration iterations, peak open list $maxOpenListSize")
 				return current
 			}
 			if (!visited.add(current.hashCode())) continue

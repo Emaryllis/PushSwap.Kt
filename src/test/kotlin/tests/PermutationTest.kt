@@ -45,12 +45,13 @@ class PermutationTest {
 	@ParameterizedTest
 	@MethodSource("allPermTest")
 	fun allPermutations(numList: List<Int>) {
-		if (!DEBUG) {
+		val (ok, moves) = if (DEBUG) {
+			suppressAllOutput(::check, numList)
+		} else {
 			check(numList)
-			return
 		}
-		val moves = suppressAllOutput(::check, numList).second
 		println("Solved $numList in ${moves.size} moves: $moves.")
+		assert(ok) { "Expected ${numList.sorted()}.\nGot ${checker.applyMoves(moves, numList)}.\nMoves: $moves" }
 	}
 
 	@Test

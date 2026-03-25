@@ -1,15 +1,18 @@
 package me.emaryllis.chunk
 
-import me.emaryllis.Settings.DEBUG
+import me.emaryllis.Settings.CHUNK_DEBUG
 import me.emaryllis.Settings.MAX_CHUNK_SIZE
+import me.emaryllis.Settings.STACK_DEBUG
 import me.emaryllis.a_star.AStar
 import me.emaryllis.data.Chunk
 import me.emaryllis.data.CircularBuffer
 import me.emaryllis.data.Move
 import me.emaryllis.data.Stack
-import me.emaryllis.utils.Debug.getMoveInfo
-import me.emaryllis.utils.Debug.getStackInfo
+import me.emaryllis.utils.DebugUtils.getMoveInfo
+import me.emaryllis.utils.DebugUtils.getStackInfo
 import java.lang.Integer.min
+import java.lang.management.MemoryMXBean
+import kotlin.io.println
 
 /**
  * ChunkSort divides a list of integer into chunks.
@@ -45,7 +48,7 @@ class ChunkSort {
 	fun chunkSort(numList: List<Int>): List<Move> {
 		if (numList == numList.sorted()) return emptyList()
 		val chunks: List<Chunk> = defineChunkValues(numList)
-		if (DEBUG) println("Defined ${chunks.size} chunk(s). ${chunks.map { "${it.minValue}-${it.maxValue}:${it.values}" }}")
+		if (CHUNK_DEBUG) println("Defined ${chunks.size} chunk(s). ${chunks.map { "${it.minValue}-${it.maxValue}:${it.values}" }}")
 		var stack = Stack(
 			CircularBuffer(numList.size, numList), CircularBuffer(numList.size),
 			chunks.first(), null
@@ -57,7 +60,7 @@ class ChunkSort {
 			i++
 		}
 		shiftSmallestToTop(stack, chunks.first().minValue)
-		if (DEBUG) println("Shifted smallest to top, final ${getStackInfo(stack)}")
+		if (STACK_DEBUG) println("Shifted smallest to top, final ${getStackInfo(stack)}")
 		return stack.moves.toList()
 	}
 
@@ -73,24 +76,34 @@ class ChunkSort {
 	 * @see prepareNextChunkHead
 	 */
 	private fun processChunk(i: Int, stack: Stack, chunks: List<Chunk>): Stack {
-		System.gc()
-		val memBean = java.lang.management.ManagementFactory.getMemoryMXBean()
-		val beforeMb = memBean.heapMemoryUsage.used / 1_048_576
+		var memBean: MemoryMXBean? = null; var beforeMb = 0L; var afterMb: Long
+		if (CHUNK_DEBUG) {
+			System.gc()
+			memBean = java.lang.management.ManagementFactory.getMemoryMXBean()
+			beforeMb = memBean.heapMemoryUsage.used / 1_048_576
+			println("Sorting chunk ${chunks[i].minValue} - ${chunks[i].maxValue}, ${getStackInfo(stack, false)}")
+		}
+
 		if (i > 0) stack.prevChunkNum = chunks[i - 1].maxValue
 		stack.chunk = chunks[i]
-		if (DEBUG) println(
-			"Sorting chunk ${chunks[i].minValue} - ${chunks[i].maxValue}, ${getStackInfo(stack, false)}"
-		)
 		val oldStack = stack.clone()
 		val newStack = aStar.sort(stack)
-		if (DEBUG) println("Chunk ${chunks[i].minValue} - ${chunks[i].maxValue} sorted.")
-		if (DEBUG) println("New ${getMoveInfo(newStack, oldStack)}, ${getStackInfo(newStack, false)}")
+
+		if (CHUNK_DEBUG) {
+			println("Chunk ${chunks[i].minValue} - ${chunks[i].maxValue} sorted.")
+			println("New ${getMoveInfo(newStack, oldStack)}, ${getStackInfo(newStack, false)}")
+		}
+
 		// Prepare next chunk: rotate A so that a value of next chunk is at head to enable PB
 		if (i + 1 < chunks.size) {
 			prepareNextChunkHead(newStack, chunks[i + 1])
 		}
-		val afterMb = memBean.heapMemoryUsage.used / 1_048_576
-		println("Chunk ${i + 1}: ${afterMb - beforeMb}MB live heap delta, ${newStack.moves.size - oldStack.moves.size} moves")
+
+		if (CHUNK_DEBUG) {
+			afterMb = memBean?.heapMemoryUsage?.used?.div(1_048_576) ?: 0L
+			println("Chunk ${i + 1}: ${afterMb - beforeMb}MB live heap delta, ${newStack.moves.size - oldStack.moves.size} moves")
+		}
+
 		return newStack
 	}
 

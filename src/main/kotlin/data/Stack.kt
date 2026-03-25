@@ -1,7 +1,7 @@
 package me.emaryllis.data
 
-import me.emaryllis.Settings.DEBUG
 import me.emaryllis.Settings.HASH_PRIME
+import me.emaryllis.Settings.MOVE_DEBUG
 
 /**
  * Stack represents the state of the PushSwap problem, including
@@ -45,7 +45,7 @@ class Stack(
 	 * and recording the move if successful. For moves affecting
 	 * both stacks, uses temp variables to ensure both operations
 	 * are executed. (Very dumb) If the move is invalid, logs an
-	 * error if [log] is true and [DEBUG] is enabled.
+	 * error if [log] is true and [MOVE_DEBUG] is enabled.
 	 *
 	 * Time Complexity: O(1) (amortised, except for resizing of [moves] by [PackedMoveList]).
 	 * Space Complexity: O(1) for mutation, O(m) for history -> m = [moves]'s size.
@@ -88,7 +88,7 @@ class Stack(
 		}
 		if (status) {
 			moves = moves.add(move)
-		} else if (log && DEBUG) System.err.println("Invalid move: $move.")
+		} else if (log && MOVE_DEBUG) System.err.println("Invalid move: $move.")
 		return status
 	}
 

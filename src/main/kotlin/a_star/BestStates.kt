@@ -1,9 +1,9 @@
 package me.emaryllis.a_star
 
-import me.emaryllis.Settings.DEBUG
+import me.emaryllis.Settings.MOVE_DEBUG
 import me.emaryllis.data.Move
 import me.emaryllis.data.Stack
-import me.emaryllis.utils.Debug.getStackInfo
+import me.emaryllis.utils.DebugUtils.getStackInfo
 
 /**
  * BestStates generates all valid next states from a given stack and allowed moves.
@@ -32,7 +32,7 @@ class BestStates {
 		for (move in allowedMoves) {
 			val currentStack = applyMoveIfValid(originalStack, move)
 			if (currentStack != null) {
-				if (DEBUG) println(
+				if (MOVE_DEBUG) println(
 					"\nApplied move: $move (Valid moves: $allowedMoves)\n" +
 							"Before:\t${getStackInfo(originalStack)}\nAfter:\t${getStackInfo(currentStack)}"
 				)

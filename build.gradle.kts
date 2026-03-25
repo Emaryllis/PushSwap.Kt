@@ -44,8 +44,8 @@ tasks {
 			showStandardStreams = true
 		}
 		maxParallelForks = Runtime.getRuntime().availableProcessors()
-		maxHeapSize = "5G"
-		jvmArgs = listOf("-XX:+UseG1GC")
+		maxHeapSize = "9G"
+		jvmArgs = listOf("-XX:+UseG1GC", "-XX:+HeapDumpOnOutOfMemoryError", "-XX:+ExitOnOutOfMemoryError")
 	}
 
 	jar {
