@@ -88,7 +88,7 @@ class MixedHeuristic {
 	 * - Rotate A forward, B backward: [i] + bRev
 	 * - Rotate A backward, B forward: aRev + [j]
 	 *
-	 * Time & Space Complexity: O(1)
+	 * Time & Space Complexity: O(1).
 	 *
 	 * @return Minimum rotation cost to align both indices to head.
 	 */
@@ -140,7 +140,7 @@ class MixedHeuristic {
 	 * - Return the smallest candidate cost among all valid elements.
 	 *
 	 * Time Complexity: O(k) -> k = B's size.
-	 * Space Complexity: O(1)
+	 * Space Complexity: O(1).
 	 *
 	 * @return The minimal pull cost among all valid candidates, or -1 if B is empty.
 	 */
@@ -149,7 +149,6 @@ class MixedHeuristic {
 		var minPullCost = Int.MAX_VALUE
 		val prefixMin = if (prefixLen > 0) stack.a[0] else Int.MAX_VALUE
 		for (k in 0 until stack.b.size) {
-			if (stack.b[k] !in stack.chunk) continue
 			val invInc = if (prefixLen > 0 && stack.b[k] > prefixMin) 1 else 0
 			val candidate = minOf(k, (stack.b.size - k) % stack.b.size) + 1 + invInc
 			if (candidate < minPullCost) minPullCost = candidate
@@ -164,7 +163,7 @@ class MixedHeuristic {
 	 * - If only one is valid, return that one.
 	 * - If neither is valid, return 0.
 	 *
-	 * Time & Space Complexity: O(1)
+	 * Time & Space Complexity: O(1).
 	 */
 	private fun nextCost(minPushCost: Int, minPullCost: Int): Int =
 		when {
@@ -176,13 +175,13 @@ class MixedHeuristic {
 
 	/**
 	 * Cross-stack disorder penalty: counts chunk elements in B that are smaller
-	 * than the maximum element of the confirmed ascending prefix in A (a[[prefixLen] - 1]).
+	 * than the maximum element of the confirmed ascending prefix in A. (a[[prefixLen] - 1])
 	 * Each such element requires at least 1 PA to restore ascending order,
 	 * making this a valid admissible lower bound.
 	 * Only applied when [Stack.prevChunkNum] is set (chunk 2 onwards).
 	 *
 	 * Time Complexity: O(k) -> k = B's size.
-	 * Space Complexity: O(1)
+	 * Space Complexity: O(1).
 	 *
 	 * @return Count of out-of-order chunk elements in B relative to prefix max.
 	 */
@@ -191,8 +190,7 @@ class MixedHeuristic {
 		val prefixMax = stack.a[prefixLen - 1]
 		var count = 0
 		for (i in 0 until stack.b.size) {
-			val v = stack.b[i]
-			if (v in stack.chunk && v < prefixMax) count++
+			if (stack.b[i] < prefixMax) count++
 		}
 		return count
 	}
@@ -204,10 +202,10 @@ class MixedHeuristic {
 	 * Only applied when [Stack.prevChunkNum] is set (chunk 2 onwards).
 	 *
 	 * Time Complexity: O(m + k) -> m = A's size, k = B's size.
-	 * Space Complexity: O(1)
+	 * Space Complexity: O(1).
 	 *
 	 * @return 1 if any chunk elements remain outside the ascending
-	 * prefix (still in A's suffix or in B), 0 otherwise
+	 * prefix (still in A's suffix or in B), 0 otherwise.
 	 */
 	private fun remainingChunkPenalty(stack: Stack, prefixLen: Int, chunkSize: Int): Int {
 		if (prefixLen >= chunkSize) return 0

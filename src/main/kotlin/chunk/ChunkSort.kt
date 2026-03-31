@@ -11,12 +11,11 @@ import me.emaryllis.data.Stack
 import me.emaryllis.utils.DebugUtils.getMoveInfo
 import me.emaryllis.utils.DebugUtils.getStackInfo
 import java.lang.Integer.min
-import java.lang.management.MemoryMXBean
-import kotlin.io.println
+import java.lang.management.ManagementFactory
 
 /**
  * ChunkSort divides a list of integer into chunks.
- * If there are only 5 or less integers, it uses [SmallSort].
+ * If there are between 2 and 5 integers, it uses [SmallSort].
  * If not, it sorts each chunk using A* search. ([AStar.sort])
  * Purpose: Efficiently sorts large lists by dividing them
  * into manageable chunks for A* sorting.
@@ -76,11 +75,10 @@ class ChunkSort {
 	 * @see prepareNextChunkHead
 	 */
 	private fun processChunk(i: Int, stack: Stack, chunks: List<Chunk>): Stack {
-		var memBean: MemoryMXBean? = null; var beforeMb = 0L; var afterMb: Long
+		val threadMXBean = ManagementFactory.getThreadMXBean() as com.sun.management.ThreadMXBean
+		val threadId = Thread.currentThread().threadId()
+		val beforeBytes = threadMXBean.getThreadAllocatedBytes(threadId)
 		if (CHUNK_DEBUG) {
-			System.gc()
-			memBean = java.lang.management.ManagementFactory.getMemoryMXBean()
-			beforeMb = memBean.heapMemoryUsage.used / 1_048_576
 			println("Sorting chunk ${chunks[i].minValue} - ${chunks[i].maxValue}, ${getStackInfo(stack, false)}")
 		}
 
@@ -100,8 +98,8 @@ class ChunkSort {
 		}
 
 		if (CHUNK_DEBUG) {
-			afterMb = memBean?.heapMemoryUsage?.used?.div(1_048_576) ?: 0L
-			println("Chunk ${i + 1}: ${afterMb - beforeMb}MB live heap delta, ${newStack.moves.size - oldStack.moves.size} moves")
+			val afterBytes = threadMXBean.getThreadAllocatedBytes(threadId)
+			println("Chunk ${i + 1}: ${(afterBytes - beforeBytes) / (1 shl 20)}MB thread allocated, ${newStack.moves.size - oldStack.moves.size} moves")
 		}
 
 		return newStack
@@ -142,15 +140,8 @@ class ChunkSort {
 	 * Space complexity: O(1) (in-place rotation).
 	 */
 	private fun prepareNextChunkHead(stack: Stack, nextChunk: Chunk) {
-		var targetIdx = -1
-		var i = 0
-		while (i < stack.a.size) {
-			if (stack.a[i] in nextChunk) {
-				targetIdx = i
-				break
-			}
-			i++
-		}
+		val targetIdx = (0 until stack.a.size).firstOrNull { stack.a[it] in nextChunk }
+		requireNotNull(targetIdx) { "No value from next chunk ${nextChunk.values} found in A: ${stack.a.value}" }
 		if (targetIdx <= 0) return
 		if (targetIdx <= stack.a.size - targetIdx) {
 			repeat(targetIdx) { stack.apply(Move.RA) }
@@ -172,8 +163,8 @@ class ChunkSort {
 	private fun shiftSmallestToTop(stack: Stack, minValue: Int) {
 		val aList = stack.a.value
 		val minIdx = stack.a.indexOf(minValue)
-		if (minIdx == -1) error("$minValue not found in A: ${stack.a.value}")
-		else if (minIdx == 0) return // already at top
+		require(minIdx != -1) { "$minValue not found in A: ${stack.a.value}" }
+		if (minIdx == 0) return // already at top
 		if (minIdx <= aList.size / 2) {
 			repeat(minIdx) { stack.apply(Move.RA) }
 		} else {

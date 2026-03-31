@@ -105,7 +105,7 @@ class Stack(
 	override fun equals(other: Any?): Boolean {
 		if (this === other) return true
 		if (other !is Stack) return false
-		return hashCode() == other.hashCode()
+		return a == other.a && b == other.b
 	}
 
 	/**

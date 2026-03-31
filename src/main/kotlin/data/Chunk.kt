@@ -10,6 +10,9 @@ package me.emaryllis.data
 data class Chunk(val minValue: Int, val maxValue: Int, val values: List<Int>) {
 	/**
 	 * Checks if a given integer is within the chunk's range.
+	 *
+	 * Time & Space Complexity: O(1).
+	 *
 	 * @param x The integer to check.
 	 * @return True if x is between minValue and maxValue (inclusive), false otherwise.
 	 */

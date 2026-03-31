@@ -48,7 +48,7 @@ class AStar {
 	 * - Uses [PriorityQueue] to always expand the most promising state.
 	 * - Tracks visited states to avoid cycles.
 	 *
-	 * Time complexity: O(S * T), where S = unique states explored, T = See [BestStates.getBestStates]
+	 * Time complexity: O(S * T), where S = unique states explored, T = See [BestStates.getBestStates].
 	 * Space complexity: O(S * n): openList and visited set can each store up to S Stack objects, each using O(n) space.
 	 *
 	 * @return [Stack] that satisfies the goal condition.
@@ -81,62 +81,29 @@ class AStar {
 	/**
 	 * Goal check for A*.
 	 * - B must be empty.
-	 * - All chunk values form one contiguous ascending block in A via [findChunkBlock].
-	 * - No future elements appear after the block via [hasFutureElementsAfter].
+	 * - All chunk values form one contiguous ascending block in A.
 	 *
 	 * Time complexity: O(n) -> n = A's size.
 	 * Space complexity: O(1).
 	 *
-	 * @return true if the goal condition is satisfied.
+	 * @return true if the goal condition is satisfied, false otherwise.
 	 */
 	private fun goal(stack: Stack): Boolean {
 		if (stack.b.isNotEmpty()) return false
-		val blockEnd = findChunkBlock(stack) ?: return false
-		return !hasFutureElementsAfter(stack, blockEnd)
-	}
+		val firstIndex = stack.a.indexOf(stack.chunk.minValue)
+		require(firstIndex != -1) { "${stack.chunk.minValue} not found in A: ${stack.a.value}" }
+		if (stack.prevChunkNum != null &&
+			stack.prevChunkNum != stack.a[(firstIndex - 1 + stack.a.size) % stack.a.size]
+		) return false
+		var i = (firstIndex + 1) % stack.a.size
+		var count = 1
 
-	/**
-	 * Scans A for a contiguous ascending block of all current chunk values.
-	 * - Returns the index immediately after the block if found.
-	 * - Returns null if the block is incomplete, out of order, or fragmented.
-	 *
-	 * Time complexity: O(n) -> n = A's size.
-	 * Space complexity: O(1).
-	 *
-	 * @return Index after the chunk block end, or null if no valid block found.
-	 */
-	private fun findChunkBlock(stack: Stack): Int? {
-		var count = 0
-		var last = Int.MIN_VALUE
-		for (i in 0 until stack.a.size) {
-			if (stack.a[i] in stack.chunk) {
-				if (count > 0 && stack.a[i] < last) return null
-				last = stack.a[i]
-				count++
-			} else if (count > 0) {
-				return if (count == stack.chunk.values.size) i else null
-			}
+		// Exits if all chunk values are found, or not all chunk values found after looping back
+		while (count != stack.chunk.values.size && i != firstIndex) {
+			if (stack.a[i] != stack.chunk.values[count]) return false
+			count++
+			i = (i + 1) % stack.a.size
 		}
-		return if (count == stack.chunk.values.size) stack.a.size else null
-	}
-
-	/**
-	 * Checks whether any future elements above [Stack.prevChunkNum] exist in A at/after
-	 * [fromIndex]. Future elements in this region violate the alignment invariant since
-	 * the chunk block must sit directly above prevChunk's block. Always returns
-	 *
-	 * Time complexity: O(n) -> n = A's size.
-	 * Space complexity: O(1).
-	 *
-	 * @param fromIndex Index immediately after the chunk block end.
-	 * @return true if any future element is found after the chunk block,
-	 * false if [Stack.prevChunkNum] is null (first chunk has no constraint)
-	 */
-	private fun hasFutureElementsAfter(stack: Stack, fromIndex: Int): Boolean {
-		if (stack.prevChunkNum == null) return false
-		for (j in fromIndex until stack.a.size) {
-			if (stack.a[j] > stack.prevChunkNum!!) return true
-		}
-		return false
+		return stack.chunk.values.size == count
 	}
 }

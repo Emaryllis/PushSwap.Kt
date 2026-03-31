@@ -22,10 +22,9 @@ class PermutationTest {
 
 	companion object {
 		@JvmStatic
-		fun allPermTest(): Stream<Arguments> = generatePermutations()
+		fun allPermTest(): Stream<Arguments> = generatePermutations(7)
 
-		private fun generatePermutations(tests: List<Int> = emptyList()): Stream<Arguments> {
-			val size = 7
+		private fun generatePermutations(size: Int, tests: List<Int> = emptyList()): Stream<Arguments> {
 			val baseList = (1..size).toList()
 			return if (tests.isEmpty()) {
 				baseList.permutations().map { Arguments.of(it) }.asStream()

@@ -20,8 +20,8 @@ class Checker {
 	private fun checker(moves: List<Move>, numList: List<Int>, expectedNumList: List<Int>): Boolean? {
 		val a = CircularBuffer(numList.size, numList)
 		val b = CircularBuffer(numList.size)
-		val keys = getOpsMap(a, b).keys
-		if (moves.any { it !in keys }) {
+		val ops = getOpsMap(a, b)
+		if (moves.any { it !in ops.keys }) {
 			if (DEBUG) System.err.print("Invalid move found: $moves")
 			return null
 		}
@@ -31,7 +31,7 @@ class Checker {
 			else if (expectedNumList != expectedNumList.sorted()) error("This permutation is never possible.")
 		}
 		moves.forEach {
-			if (getOpsMap(a, b)[it]?.invoke() != true) {
+			if (ops[it]?.invoke() != true) {
 				if (DEBUG) System.err.print("Failed to execute move: $it. Stack A: ${a.toList()}, Stack B: ${b.toList()}.|")
 				return false
 			}
@@ -41,24 +41,23 @@ class Checker {
 			return false
 		}
 		val status = a.value.toList() == expectedNumList
-		if (!status && DEBUG) {
-			System.err.print("Expected: $expectedNumList, Got: ${a.value.toList()}.|")
-		}
+		if (!status && DEBUG) System.err.print("Expected: $expectedNumList, Got: ${a.value.toList()}.|")
 		return status
 	}
 
 	fun applyMoves(moves: List<Move>, numList: List<Int>): List<Int>? {
 		val a = CircularBuffer(numList.size, numList)
 		val b = CircularBuffer(numList.size)
-		val keys = getOpsMap(a, b).keys
-		if (moves.any { it !in keys }) {
+		val ops = getOpsMap(a, b)
+		getOpsMap(a, b).keys
+		if (moves.any { it !in ops.keys }) {
 			if (DEBUG) System.err.print("Invalid move found: $moves")
 			return null
 		}
 		if (numList.size != numList.toSet().size) return null
 		if (moves.isEmpty() && (numList.isEmpty() || numList == numList.sorted())) return numList
 		moves.forEach {
-			if (getOpsMap(a, b)[it]?.invoke() != true) {
+			if (ops[it]?.invoke() != true) {
 				if (DEBUG) System.err.print("Failed to execute move: $it. Stack A: ${a.toList()}, Stack B: ${b.toList()}.|")
 				return listOf()
 			}

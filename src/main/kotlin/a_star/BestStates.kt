@@ -23,7 +23,7 @@ class BestStates {
 	 * Lets the priority queue handle ordering; no beam narrowing.
 	 *
 	 * Time complexity: O(m * f) -> m = [allowedMoves]'s size, f = [applyMoveIfValid].
-	 * Space complexity: O(m) -> output of [Stack] size
+	 * Space complexity: O(m) -> output of [Stack] size.
 	 *
 	 * @return All valid successor states from originalStack using [allowedMoves].
 	 */
@@ -46,12 +46,12 @@ class BestStates {
 	 * Fast invalidation check for moves.
 	 * - Prunes inverse moves.
 	 * - Guards PB to only push chunk elements from A to B. (Obtained from [Stack.chunk])
-	 * - Guards PA to only pull if B not empty (B should only contain current chunk values by invariant).
+	 * - Guards PA to only pull if B not empty. (B should only contain current chunk values by invariant)
 	 *
 	 * - Time & space complexity: O(1).
 	 */
 	private fun invalidFast(originalStack: Stack, move: Move): Boolean {
-		if (originalStack.moves.isNotEmpty() && originalStack.moves.lastOrNull() == move.inverse()) return true
+		if (originalStack.moves.lastOrNull() == move.inverse()) return true
 		if (move == Move.PB && (originalStack.a.isEmpty() || originalStack.a.first() !in originalStack.chunk)) return true
 		if (move == Move.PA && originalStack.b.isEmpty()) return true
 		return false
@@ -80,11 +80,11 @@ class BestStates {
 	 * Opportunistically applies conditional swaps (SS > SA > SB) to improve ordering.
 	 * Ignoring the return type of [Stack.apply] since preconditions were checked.
 	 * - Checks if it is able to swap both.
-	 * - Checks if it is able to swap A [canSA]
+	 * - Checks if it is able to swap A [canSA].
 	 * - Checks if its able to swap B.
 	 *
 	 * Conditions:
-	 * - Swapping A: [canSA]
+	 * - Swapping A: [canSA].
 	 * - Swapping B: only if B has at least 2 elements and b[0] < b[1].
 	 * (Improves descending order since pushing is FILO)
 	 *
