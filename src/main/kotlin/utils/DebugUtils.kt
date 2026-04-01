@@ -6,8 +6,7 @@ object DebugUtils {
 	fun getMoveInfo(newStack: Stack, oldStack: Stack): String =
 		"Moves(${newStack.moves.size - oldStack.moves.size}): ${
 			newStack.moves.toList().subList(
-				oldStack.moves.size,
-				newStack.moves.size
+				oldStack.moves.size, newStack.moves.size
 			)
 		}"
 
