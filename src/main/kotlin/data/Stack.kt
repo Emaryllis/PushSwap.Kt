@@ -122,4 +122,10 @@ class Stack(
 		result = HASH_PRIME * result + b.hashCode()
 		return result
 	}
+
+	fun hash64(): Long {
+		var result = a.hash64()
+		result = HASH_PRIME * result + b.hash64()
+		return result
+	}
 }

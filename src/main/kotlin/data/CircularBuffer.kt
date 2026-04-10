@@ -203,12 +203,19 @@ class CircularBuffer(val capacity: Int, numList: List<Int> = emptyList()) : Coll
 		return result
 	}
 
+	fun hash64(): Long {
+		var result = size.toLong()
+		for (i in indices) {
+			result = HASH_PRIME * result + get(i)
+		}
+		return result
+	}
+
 	/**
 	 * Time & Space Complexity: O(1)
 	 *
 	 * @return true if buffer is empty, false otherwise.
 	 */
-	@Suppress("ReplaceSizeZeroCheckWithIsEmpty")
 	override fun isEmpty(): Boolean = size == 0 // NOSONAR: Replacing with 'isEmpty' causes inf recursion loop
 
 	/**

@@ -59,7 +59,7 @@ class AStar {
 	private fun aStar(start: Stack): Stack {
 		val openList = PriorityQueue<Stack> { it.currentCost }
 		openList.push(start)
-		val visited = mutableSetOf<Int>()
+		val visited = mutableSetOf<Long>()
 		var iteration = 0
 		var maxOpenListSize = 0
 		while (openList.isNotEmpty()) {
@@ -71,7 +71,7 @@ class AStar {
 				if (CHUNK_DEBUG) println("Chunk ${start.chunk.minValue}-${start.chunk.maxValue}: $iteration iterations, peak open list $maxOpenListSize")
 				return current
 			}
-			if (!visited.add(current.hashCode())) continue
+			if (!visited.add(current.hash64())) continue
 			val successors = BestStates().getBestStates(current, Move.mixedAllowed)
 			successors.forEach { openList.push(it) }
 		}

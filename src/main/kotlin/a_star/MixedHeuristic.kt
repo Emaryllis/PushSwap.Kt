@@ -11,18 +11,18 @@ class MixedHeuristic {
 	 * 1. Finds the length of the contiguous ascending prefix of chunk elements in A. [contiguousAscendingPrefixLen]
 	 * 2. If B is empty and prefix covers the full chunk, returns [alignmentGapCost].
 	 * 3. Computes the minimal next move cost via [candidatePushCost], [candidatePullCost], and [nextCost].
-	 * 4. For chunk 2 onwards ([Stack.prevChunkNum] set), adds alignment penalties:
-	 *    [crossStackDisorder] + [remainingChunkPenalty] + [futureRotateBound].
+	 * 4. For chunk 1, it adds [firstChunkTransferCost] to account for elements requiring both a push and a pull.
+	 * 5. For chunk 2+, adds [crossStackDisorder], [remainingChunkPenalty], and [futureRotateBound] as alignment penalties.
 	 *
 	 * Time complexity: O((m-p)*k) -> m = A's size, p = prefixLen, k = B's size (Due to [candidatePushCost])
-	 * Space complexity: O(1)
+	 * Space complexity: O(1).
 	 */
 	fun calculate(stack: Stack): Int {
 		val chunkSize = stack.chunk.values.size
 		val prefixLen = contiguousAscendingPrefixLen(stack, chunkSize)
 		if (stack.b.isEmpty() && prefixLen == chunkSize) return alignmentGapCost(stack, chunkSize)
 		val next = nextCost(candidatePushCost(stack, prefixLen, chunkSize), candidatePullCost(stack, prefixLen))
-		if (stack.prevChunkNum == null) return next
+		if (stack.prevChunkNum == null) return next + firstChunkTransferCost(stack, prefixLen, chunkSize)
 		return next + crossStackDisorder(stack, prefixLen) + remainingChunkPenalty(stack, prefixLen, chunkSize) + futureRotateBound(stack)
 	}
 
@@ -34,8 +34,8 @@ class MixedHeuristic {
 	 *    - The element is greater than or equal to the previous (ascending order).
 	 * - Stop at the first element that breaks these conditions.
 	 *
-	 * Time Complexity: O(min(m, c)) -> m = A's size, c = chunk size. (For most cases, it's [MAX_CHUNK_SIZE])
-	 * Space Complexity: O(1)
+	 * Time Complexity: O(min(m, c)) -> m = A's size, c = [chunkSize]. (For most cases, it's [MAX_CHUNK_SIZE])
+	 * Space Complexity: O(1).
 	 *
 	 * @return Length of the contiguous ascending prefix of chunk elements in stack A.
 	 */
@@ -59,7 +59,7 @@ class MixedHeuristic {
 	 * value. Each requires at least 1 move to clear.
 	 *
 	 * Time Complexity: O(m) -> m = A's size.
-	 * Space Complexity: O(1)
+	 * Space Complexity: O(1).
 	 *
 	 * @return Number of future elements above [Stack.prevChunkNum], or 0 if [Stack.prevChunkNum] is null.
 	 */
@@ -128,6 +128,30 @@ class MixedHeuristic {
 			if (candidate < minPushCost) minPushCost = candidate
 		}
 		return if (minPushCost == Int.MAX_VALUE) -1 else minPushCost
+	}
+
+	/**
+	 * Lower-bound on remaining transfer cost for chunk 1. Elements still in A's suffix
+	 * each require at least 2 moves (PB + PA) for sorting, while elements already
+	 * in B only require at least 1 (PA). The bound is ([chunkSize] - [prefixLen])
+	 * counts all unplaced elements as >=1 move each (PA minimum). inSuffix adds 1
+	 * for each element still in A's suffix, since those additionally require a
+	 * PB before PA, thus 2 moves total vs 1 for elements already in B.
+	 *
+	 * Only used for chunk 1 where no previous chunk penalties apply.
+	 * For chunk 2+, use [crossStackDisorder] + [remainingChunkPenalty] + [futureRotateBound].
+	 *
+	 * Time Complexity: O(m) -> m = A's size.
+	 * Space Complexity: O(1).
+	 *
+	 * @return Admissible lower bound on remaining moves to complete chunk 1.
+	 */
+	private fun firstChunkTransferCost(stack: Stack, prefixLen: Int, chunkSize: Int): Int {
+		var inSuffix = 0
+		for (i in prefixLen until stack.a.size) {
+			if (stack.a[i] in stack.chunk) inSuffix++
+		}
+		return (chunkSize - prefixLen) + inSuffix
 	}
 
 	/**
@@ -222,7 +246,7 @@ class MixedHeuristic {
 	 * Only applied when [Stack.prevChunkNum] is set (chunks 2 onwards).
 	 *
 	 * Time Complexity: O(m) -> m = A's size.
-	 * Space Complexity: O(1)
+	 * Space Complexity: O(1).
 	 *
 	 * @return Count of future elements after the prevChunk block.
 	 */

@@ -5,6 +5,7 @@ import Settings.DEBUG
 import Utils.nthPermutation
 import Utils.permutations
 import Utils.suppressAllOutput
+import me.emaryllis.Settings.MAX_CHUNK_SIZE
 import me.emaryllis.chunk.ChunkSort
 import me.emaryllis.data.Move
 import org.junit.jupiter.api.Disabled
@@ -22,7 +23,7 @@ class PermutationTest {
 
 	companion object {
 		@JvmStatic
-		fun allPermTest(): Stream<Arguments> = generatePermutations(7)
+		fun allPermTest(): Stream<Arguments> = generatePermutations(MAX_CHUNK_SIZE)
 
 		private fun generatePermutations(size: Int, tests: List<Int> = emptyList()): Stream<Arguments> {
 			val baseList = (1..size).toList()
