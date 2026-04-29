@@ -64,7 +64,7 @@ class ZigZagTest {
 	@Test
 	@Tag("manual")
 	fun zigZagTest() {
-		zigZag(Settings.MAX_CHUNK_SIZE * 3)
+		zigZag(Settings.MAX_CHUNK_SIZE * 4)
 	}
 
 	/**
@@ -73,7 +73,7 @@ class ZigZagTest {
 	@Test
 	@Tag("manual")
 	fun zigZagIncrementChunk() {
-		val testUpToChunks = 3
+		val testUpToChunks = 4
 		for (i in 1..testUpToChunks) {
 			assertTimeoutPreemptively(Duration.ofSeconds(15L * (1..i).sum())) {
 				zigZag(Settings.MAX_CHUNK_SIZE * i)

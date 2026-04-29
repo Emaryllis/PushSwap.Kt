@@ -30,17 +30,15 @@ class BestStates(val metrics: SearchDebugMetrics, val mixedHeuristic: MixedHeuri
 	fun getBestStates(originalStack: Stack, allowedMoves: List<Move>): List<Stack> {
 		val possibleStatesByHash = mutableMapOf<Long, Stack>()
 		for (move in allowedMoves) {
-			val currentStack = applyMoveIfValid(originalStack, move)
-			if (currentStack != null) {
-				if (MOVE_DEBUG) println(
-					"\nApplied move: $move (Valid moves: $allowedMoves)\n" +
-							"Before:\t${getStackInfo(originalStack)}\nAfter:\t${getStackInfo(currentStack)}"
-				)
-				val hash = currentStack.hash64()
-				val previous = possibleStatesByHash[hash]
-				if (previous == null || currentStack.moves.size < previous.moves.size) {
-					possibleStatesByHash[hash] = currentStack
-				}
+			val currentStack = applyMoveIfValid(originalStack, move) ?: continue
+			if (MOVE_DEBUG) println(
+				"\nApplied move: $move (Valid moves: $allowedMoves)\n" +
+						"Before:\t${getStackInfo(originalStack)}\nAfter:\t${getStackInfo(currentStack)}"
+			)
+			val hash = currentStack.hash64()
+			val previous = possibleStatesByHash[hash]
+			if (previous == null || currentStack.moves.size < previous.moves.size) {
+				possibleStatesByHash[hash] = currentStack
 			}
 		}
 		return possibleStatesByHash.values.toList()

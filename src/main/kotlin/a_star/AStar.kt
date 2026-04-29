@@ -79,7 +79,7 @@ class AStar {
 		val (openList, visited, bestGByHash) = initAStar(start)
 		while (openList.isNotEmpty()) {
 			val current = openList.pop()
-			if (CHUNK_DEBUG) metrics.iteration++
+			if (CHUNK_DEBUG || STACK_DEBUG) metrics.iteration++
 			if (openList.size > metrics.maxOpenListSize) metrics.maxOpenListSize = openList.size
 			if (STACK_DEBUG) println("\nI:${metrics.iteration} Size:${openList.size} ${getStackInfo(current)}")
 			val currentHash = current.hash64()
@@ -103,7 +103,10 @@ class AStar {
 		error("Failed to find solution for chunk ${start.chunk.minValue}-${start.chunk.maxValue}")
 	}
 
-	private fun addSuccessors(current: Stack, visited: Set<Long>, bestGByHash: MutableMap<Long, Int>, openList: PriorityQueue<Stack>) {
+	private fun addSuccessors(
+		current: Stack, visited: Set<Long>, bestGByHash: MutableMap<Long, Int>,
+		openList: PriorityQueue<Stack>
+	) {
 		val successors = bestStates.getBestStates(current, Move.mixedAllowed)
 		successors.forEach { successor ->
 			if (CHUNK_DEBUG) metrics.consideredSuccessors++
