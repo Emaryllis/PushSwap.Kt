@@ -1,7 +1,9 @@
 package me.emaryllis.a_star
 
+import me.emaryllis.Settings.CHUNK_DEBUG
 import me.emaryllis.Settings.MOVE_DEBUG
 import me.emaryllis.data.Move
+import me.emaryllis.data.SearchDebugMetrics
 import me.emaryllis.data.Stack
 import me.emaryllis.utils.DebugUtils.getStackInfo
 
@@ -15,9 +17,7 @@ import me.emaryllis.utils.DebugUtils.getStackInfo
  *
  * @see getBestStates
  */
-class BestStates {
-	private val heuristic = MixedHeuristic()
-
+class BestStates(val metrics: SearchDebugMetrics, val mixedHeuristic: MixedHeuristic) {
 	/**
 	 * Applies each move, checks validity, and optimises with swaps.
 	 * Lets the priority queue handle ordering; no beam narrowing.
@@ -28,7 +28,7 @@ class BestStates {
 	 * @return All valid successor states from originalStack using [allowedMoves].
 	 */
 	fun getBestStates(originalStack: Stack, allowedMoves: List<Move>): List<Stack> {
-		val possibleStates = mutableListOf<Stack>()
+		val possibleStatesByHash = mutableMapOf<Long, Stack>()
 		for (move in allowedMoves) {
 			val currentStack = applyMoveIfValid(originalStack, move)
 			if (currentStack != null) {
@@ -36,10 +36,14 @@ class BestStates {
 					"\nApplied move: $move (Valid moves: $allowedMoves)\n" +
 							"Before:\t${getStackInfo(originalStack)}\nAfter:\t${getStackInfo(currentStack)}"
 				)
-				possibleStates.add(currentStack)
+				val hash = currentStack.hash64()
+				val previous = possibleStatesByHash[hash]
+				if (previous == null || currentStack.moves.size < previous.moves.size) {
+					possibleStatesByHash[hash] = currentStack
+				}
 			}
 		}
-		return possibleStates
+		return possibleStatesByHash.values.toList()
 	}
 
 	/**
@@ -51,10 +55,65 @@ class BestStates {
 	 * - Time & space complexity: O(1).
 	 */
 	private fun invalidFast(originalStack: Stack, move: Move): Boolean {
-		if (originalStack.moves.lastOrNull() == move.inverse()) return true
-		if (move == Move.PB && (originalStack.a.isEmpty() || originalStack.a.first() !in originalStack.chunk)) return true
-		if (move == Move.PA && originalStack.b.isEmpty()) return true
+		if (originalStack.moves.lastOrNull() == move.inverse()) {
+			if (CHUNK_DEBUG) metrics.inversePrunes++
+			return true
+		}
+		if (isInvalidBySize(originalStack, move)) {
+			if (CHUNK_DEBUG) metrics.sizePrunes++
+			return true
+		}
+		if (rotationAwayFromChunkHead(originalStack, move)) {
+			if (CHUNK_DEBUG) metrics.chunkHeadRotationPrunes++
+			return true
+		}
+		if (pruneNonCanonicalAWhenBEmpty(originalStack, move)) {
+			if (CHUNK_DEBUG) metrics.nonCanonicalRotationPrunes++
+			return true
+		}
+		if (move == Move.PB && (originalStack.a.isEmpty() || originalStack.a.first() !in originalStack.chunk)) {
+			if (CHUNK_DEBUG) metrics.pbHeadGuardPrunes++
+			return true
+		}
+		if (move == Move.PA && originalStack.b.isEmpty()) {
+			if (CHUNK_DEBUG) metrics.paEmptyGuardPrunes++
+			return true
+		}
 		return false
+	}
+
+	private fun pruneNonCanonicalAWhenBEmpty(stack: Stack, move: Move): Boolean {
+		if (stack.prevChunkNum == null) return false
+		if (stack.b.isNotEmpty()) return false
+		if (stack.a.isEmpty() || stack.a.first() in stack.chunk) return false
+
+		val targetIdx = stack.a.indices.firstOrNull { stack.a[it] in stack.chunk } ?: return false
+		val backward = stack.a.size - targetIdx
+		if (targetIdx == backward) return false
+
+		return when {
+			targetIdx < backward -> move == Move.RRA || move == Move.RRR
+			else -> move == Move.RA || move == Move.RR
+		}
+	}
+
+	private fun rotationAwayFromChunkHead(stack: Stack, move: Move): Boolean {
+		if (stack.prevChunkNum == null) return false
+		if (stack.b.isNotEmpty()) return false
+		if (stack.a.isEmpty() || stack.a.first() !in stack.chunk) return false
+		return move == Move.RA || move == Move.RRA || move == Move.RR || move == Move.RRR
+	}
+
+	private fun isInvalidBySize(stack: Stack, move: Move): Boolean {
+		val needsA2 = when (move) {
+			Move.SA, Move.SS, Move.RA, Move.RR, Move.RRA, Move.RRR -> true
+			else -> false
+		}
+		val needsB2 = when (move) {
+			Move.SB, Move.SS, Move.RB, Move.RR, Move.RRB, Move.RRR -> true
+			else -> false
+		}
+		return (needsA2 && stack.a.size < 2) || (needsB2 && stack.b.size < 2)
 	}
 
 	/**
@@ -71,7 +130,7 @@ class BestStates {
 		val stack = original.clone()
 		if (!stack.apply(move)) return null
 		trySwap(stack)
-		stack.heuristic = heuristic.calculate(stack)
+		stack.heuristic = mixedHeuristic.calculate(stack)
 		if (stack.heuristic < 0) return null
 		return stack
 	}

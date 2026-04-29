@@ -4,6 +4,7 @@ import me.emaryllis.Settings.CHUNK_DEBUG
 import me.emaryllis.Settings.STACK_DEBUG
 import me.emaryllis.data.Move
 import me.emaryllis.data.PriorityQueue
+import me.emaryllis.data.SearchDebugMetrics
 import me.emaryllis.data.Stack
 import me.emaryllis.utils.DebugUtils.getStackInfo
 
@@ -14,7 +15,9 @@ import me.emaryllis.utils.DebugUtils.getStackInfo
  * Time & Space Complexity: See [sort]
  */
 class AStar {
+	private val metrics = SearchDebugMetrics()
 	private val mixedHeuristic = MixedHeuristic()
+	private val bestStates = BestStates(metrics, mixedHeuristic)
 
 	/**
 	 * Entry point for A* sorting.
@@ -41,6 +44,22 @@ class AStar {
 		return newStack
 	}
 
+	private fun initAStar(start: Stack): Triple<PriorityQueue<Stack>, MutableSet<Long>, MutableMap<Long, Int>> {
+		metrics.reset()
+		val openList = PriorityQueue<Stack> { left, right ->
+			val byF = left.currentCost.compareTo(right.currentCost)
+			if (byF != 0) return@PriorityQueue byF
+			val byH = left.heuristic.compareTo(right.heuristic)
+			if (byH != 0) return@PriorityQueue byH
+			left.moves.size.compareTo(right.moves.size)
+		}
+		openList.push(start)
+		val visited = mutableSetOf<Long>()
+		val bestGByHash = mutableMapOf<Long, Int>()
+		bestGByHash[start.hash64()] = start.moves.size
+		return Triple(openList, visited, bestGByHash)
+	}
+
 	/**
 	 * Core A* search loop.
 	 * Purpose: Pops states from [PriorityQueue], checks for goal,
@@ -57,25 +76,51 @@ class AStar {
 	 * @see Stack
 	 */
 	private fun aStar(start: Stack): Stack {
-		val openList = PriorityQueue<Stack> { it.currentCost }
-		openList.push(start)
-		val visited = mutableSetOf<Long>()
-		var iteration = 0
-		var maxOpenListSize = 0
+		val (openList, visited, bestGByHash) = initAStar(start)
 		while (openList.isNotEmpty()) {
 			val current = openList.pop()
-			iteration++
-			if (openList.size > maxOpenListSize) maxOpenListSize = openList.size
-			if (STACK_DEBUG) println("\nI:$iteration Size:${openList.size} ${getStackInfo(current)}")
+			if (CHUNK_DEBUG) metrics.iteration++
+			if (openList.size > metrics.maxOpenListSize) metrics.maxOpenListSize = openList.size
+			if (STACK_DEBUG) println("\nI:${metrics.iteration} Size:${openList.size} ${getStackInfo(current)}")
+			val currentHash = current.hash64()
+			val bestKnownCurrentG = bestGByHash[currentHash]
+			if (bestKnownCurrentG != null && current.moves.size > bestKnownCurrentG) {
+				if (CHUNK_DEBUG) metrics.stalePops++
+				continue
+			}
 			if (goal(current)) {
-				if (CHUNK_DEBUG) println("Chunk ${start.chunk.minValue}-${start.chunk.maxValue}: $iteration iterations, peak open list $maxOpenListSize")
+				if (CHUNK_DEBUG) {
+					println("Chunk ${start.chunk.minValue}-${start.chunk.maxValue}: ${metrics.iteration} iterations, peak open list ${metrics.maxOpenListSize}")
+					println("A* metrics ${start.chunk.minValue}-${start.chunk.maxValue}:")
+					metrics.printSearchMetrics()
+					metrics.printInvalidationMetrics()
+				}
 				return current
 			}
-			if (!visited.add(current.hash64())) continue
-			val successors = BestStates().getBestStates(current, Move.mixedAllowed)
-			successors.forEach { openList.push(it) }
+			if (!visited.add(currentHash)) continue
+			addSuccessors(current, visited, bestGByHash, openList)
 		}
 		error("Failed to find solution for chunk ${start.chunk.minValue}-${start.chunk.maxValue}")
+	}
+
+	private fun addSuccessors(current: Stack, visited: Set<Long>, bestGByHash: MutableMap<Long, Int>, openList: PriorityQueue<Stack>) {
+		val successors = bestStates.getBestStates(current, Move.mixedAllowed)
+		successors.forEach { successor ->
+			if (CHUNK_DEBUG) metrics.consideredSuccessors++
+			val successorHash = successor.hash64()
+			if (visited.contains(successorHash)) {
+				if (CHUNK_DEBUG) metrics.prunedVisitedSuccessors++
+				return@forEach
+			}
+			val newG = successor.moves.size
+			val oldG = bestGByHash[successorHash]
+			if (oldG != null && newG >= oldG) {
+				if (CHUNK_DEBUG) metrics.prunedDominatedSuccessors++
+				return@forEach
+			}
+			bestGByHash[successorHash] = newG
+			openList.push(successor)
+		}
 	}
 
 	/**

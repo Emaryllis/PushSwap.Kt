@@ -78,6 +78,7 @@ class ZigZagTest {
 			assertTimeoutPreemptively(Duration.ofSeconds(15L * (1..i).sum())) {
 				zigZag(Settings.MAX_CHUNK_SIZE * i)
 			}
+			println()
 		}
 	}
 

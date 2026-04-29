@@ -1,13 +1,13 @@
 package me.emaryllis.data
 
 /**
- * PriorityQueue is a binary min-heap for [T] objects, ordered by their [Stack.currentCost].
+ * PriorityQueue is a binary min-heap for [T] objects, ordered by a caller-provided comparator.
  *
  * Purpose: Efficiently retrieves and manages the lowest-cost [T] for A* search and related algorithms.
  *
  * Time & Space Complexity: See individual methods.
  */
-class PriorityQueue<T>(private val cost: (T) -> Int) {
+class PriorityQueue<T>(private val compare: (T, T) -> Int) {
 	private val heap = mutableListOf<T>()
 
 	/**
@@ -77,7 +77,7 @@ class PriorityQueue<T>(private val cost: (T) -> Int) {
 		val value = heap[i]
 		while (i > 0) {
 			val parent = (i - 1) / 2
-			if (cost(value) >= cost(heap[parent])) break
+			if (compare(value, heap[parent]) >= 0) break
 			heap[i] = heap[parent]
 			i = parent
 		}
@@ -99,10 +99,10 @@ class PriorityQueue<T>(private val cost: (T) -> Int) {
 			val left = 2 * i + 1
 			val right = 2 * i + 2
 			var smallestChild = left
-			if (right < heap.size && cost(heap[right]) < cost(heap[left])) {
+			if (right < heap.size && compare(heap[right], heap[left]) < 0) {
 				smallestChild = right
 			}
-			if (cost(heap[smallestChild]) >= cost(value)) break
+			if (compare(heap[smallestChild], value) >= 0) break
 			heap[i] = heap[smallestChild]
 			i = smallestChild
 		}

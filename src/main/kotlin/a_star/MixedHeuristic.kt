@@ -1,7 +1,5 @@
 package me.emaryllis.a_star
 
-import me.emaryllis.Settings.MAX_CHUNK_SIZE
-import me.emaryllis.data.Chunk
 import me.emaryllis.data.Stack
 
 class MixedHeuristic {
@@ -9,21 +7,47 @@ class MixedHeuristic {
 	 * Calculates the heuristic value for the current stack state.
 	 * Purpose: Estimates the cost to reach the goal state for the current chunk.
 	 * 1. Finds the length of the contiguous ascending prefix of chunk elements in A. [contiguousAscendingPrefixLen]
-	 * 2. If B is empty and prefix covers the full chunk, returns [alignmentGapCost].
-	 * 3. Computes the minimal next move cost via [candidatePushCost], [candidatePullCost], and [nextCost].
-	 * 4. For chunk 1, it adds [firstChunkTransferCost] to account for elements requiring both a push and a pull.
-	 * 5. For chunk 2+, adds [crossStackDisorder], [remainingChunkPenalty], and [futureRotateBound] as alignment penalties.
+	 * 2. If B is empty and prefix covers the full chunk, returns 0.
+	 * 3. Computes a conservative lower bound via [candidatePushCost], [candidatePullCost], and [nextCost].
+	 * 4. Combines independent lower bounds with max() to avoid double-counting.
 	 *
 	 * Time complexity: O((m-p)*k) -> m = A's size, p = prefixLen, k = B's size (Due to [candidatePushCost])
 	 * Space complexity: O(1).
 	 */
 	fun calculate(stack: Stack): Int {
 		val chunkSize = stack.chunk.values.size
+		if (isChunkGoal(stack, chunkSize)) return 0
 		val prefixLen = contiguousAscendingPrefixLen(stack, chunkSize)
-		if (stack.b.isEmpty() && prefixLen == chunkSize) return alignmentGapCost(stack, chunkSize)
-		val next = nextCost(candidatePushCost(stack, prefixLen, chunkSize), candidatePullCost(stack, prefixLen))
-		if (stack.prevChunkNum == null) return next + firstChunkTransferCost(stack, prefixLen, chunkSize)
-		return next + crossStackDisorder(stack, prefixLen) + remainingChunkPenalty(stack, prefixLen, chunkSize) + futureRotateBound(stack)
+
+		// Strictly admissible composition: combine only independent lower bounds via max.
+		val directionalLowerBound = nextCost(
+			candidatePushCost(stack, prefixLen, chunkSize),
+			candidatePullCost(stack)
+		)
+		val mustEmptyBLowerBound = stack.b.size
+		val chunkRunLowerBound = cyclicChunkRunDeficit(stack)
+		return maxOf(directionalLowerBound, mustEmptyBLowerBound, chunkRunLowerBound)
+	}
+
+	/**
+	 * Returns true when the current chunk already satisfies the circular goal shape:
+	 * B is empty and the chunk values appear as one ascending cyclic block in A.
+	 */
+	private fun isChunkGoal(stack: Stack, chunkSize: Int): Boolean {
+		if (stack.b.isNotEmpty()) return false
+		if (chunkSize == 0) return true
+		val firstIndex = stack.a.indexOf(stack.chunk.minValue)
+		if (firstIndex == -1) return false
+		if (stack.prevChunkNum != null && stack.prevChunkNum != stack.a[(firstIndex - 1 + stack.a.size) % stack.a.size]) return false
+
+		var i = (firstIndex + 1) % stack.a.size
+		var count = 1
+		while (count != chunkSize && i != firstIndex) {
+			if (stack.a[i] != stack.chunk.values[count]) return false
+			count++
+			i = (i + 1) % stack.a.size
+		}
+		return count == chunkSize
 	}
 
 	/**
@@ -34,7 +58,7 @@ class MixedHeuristic {
 	 *    - The element is greater than or equal to the previous (ascending order).
 	 * - Stop at the first element that breaks these conditions.
 	 *
-	 * Time Complexity: O(min(m, c)) -> m = A's size, c = [chunkSize]. (For most cases, it's [MAX_CHUNK_SIZE])
+	 * Time Complexity: O(min(m, c)) -> m = A's size, c = [chunkSize].
 	 * Space Complexity: O(1).
 	 *
 	 * @return Length of the contiguous ascending prefix of chunk elements in stack A.
@@ -50,28 +74,6 @@ class MixedHeuristic {
 			prefixLen++
 		}
 		return prefixLen
-	}
-
-	/**
-	 * Near-goal cost when B is empty and the full chunk prefix is formed
-	 * in A. Does nothing if there is only 1 chunk. Otherwise, counts
-	 * future elements still above the previous chunk's maximum
-	 * value. Each requires at least 1 move to clear.
-	 *
-	 * Time Complexity: O(m) -> m = A's size.
-	 * Space Complexity: O(1).
-	 *
-	 * @return Number of future elements above [Stack.prevChunkNum], or 0 if [Stack.prevChunkNum] is null.
-	 */
-	private fun alignmentGapCost(stack: Stack, chunkSize: Int): Int {
-		if (stack.prevChunkNum == null) return 0
-		var gap = 0
-		var i = chunkSize
-		while (i < stack.a.size && stack.a[i] > stack.prevChunkNum!!) {
-			gap++
-			i++
-		}
-		return gap
 	}
 
 	/**
@@ -131,36 +133,10 @@ class MixedHeuristic {
 	}
 
 	/**
-	 * Lower-bound on remaining transfer cost for chunk 1. Elements still in A's suffix
-	 * each require at least 2 moves (PB + PA) for sorting, while elements already
-	 * in B only require at least 1 (PA). The bound is ([chunkSize] - [prefixLen])
-	 * counts all unplaced elements as >=1 move each (PA minimum). inSuffix adds 1
-	 * for each element still in A's suffix, since those additionally require a
-	 * PB before PA, thus 2 moves total vs 1 for elements already in B.
-	 *
-	 * Only used for chunk 1 where no previous chunk penalties apply.
-	 * For chunk 2+, use [crossStackDisorder] + [remainingChunkPenalty] + [futureRotateBound].
-	 *
-	 * Time Complexity: O(m) -> m = A's size.
-	 * Space Complexity: O(1).
-	 *
-	 * @return Admissible lower bound on remaining moves to complete chunk 1.
-	 */
-	private fun firstChunkTransferCost(stack: Stack, prefixLen: Int, chunkSize: Int): Int {
-		var inSuffix = 0
-		for (i in prefixLen until stack.a.size) {
-			if (stack.a[i] in stack.chunk) inSuffix++
-		}
-		return (chunkSize - prefixLen) + inSuffix
-	}
-
-	/**
 	 * 3. Finds minimal cost to pull a chunk element from B to A.
 	 * For each chunk element in stack B:
 	 * - Calculate the minimal rotation needed to bring it to the top (forward or backward).
-	 * - If it would sit above a smaller element in the current prefix (i.e. b[[k]] > a[0]),
-	 *   add 1 to account for the extra move needed to resolve the resulting inversion.
-	 * - The candidate cost is: min(k, (B's size - k) % B's size) + 1 (+1 if inversion).
+	 * - The candidate cost is: min(k, (B's size - k) % B's size) + 1.
 	 * - Return the smallest candidate cost among all valid elements.
 	 *
 	 * Time Complexity: O(k) -> k = B's size.
@@ -168,16 +144,32 @@ class MixedHeuristic {
 	 *
 	 * @return The minimal pull cost among all valid candidates, or -1 if B is empty.
 	 */
-	private fun candidatePullCost(stack: Stack, prefixLen: Int): Int {
+	private fun candidatePullCost(stack: Stack): Int {
 		if (stack.b.isEmpty()) return -1
 		var minPullCost = Int.MAX_VALUE
-		val prefixMin = if (prefixLen > 0) stack.a[0] else Int.MAX_VALUE
-		for (k in 0 until stack.b.size) {
-			val invInc = if (prefixLen > 0 && stack.b[k] > prefixMin) 1 else 0
-			val candidate = minOf(k, (stack.b.size - k) % stack.b.size) + 1 + invInc
+		for (k in stack.b.indices) {
+			val candidate = minOf(k, (stack.b.size - k) % stack.b.size) + 1
 			if (candidate < minPullCost) minPullCost = candidate
 		}
 		return if (minPullCost == Int.MAX_VALUE) -1 else minPullCost
+	}
+
+	/**
+	 * Lower bound based on how fragmented the current chunk is in A.
+	 * Each additional cyclic run of current-chunk values needs at least one
+	 * move to merge into a single contiguous block.
+	 */
+	private fun cyclicChunkRunDeficit(stack: Stack): Int {
+		if (stack.a.isEmpty()) return 0
+		val indices = stack.a.indices.filter { stack.a[it] in stack.chunk }
+		if (indices.isEmpty()) return 0
+
+		var runs = 1
+		for (i in 1 until indices.size) {
+			if (indices[i] != indices[i - 1] + 1) runs++
+		}
+		if (indices.first() == 0 && indices.last() == stack.a.size - 1) runs--
+		return maxOf(0, runs - 1)
 	}
 
 	/**
@@ -196,69 +188,4 @@ class MixedHeuristic {
 			minPullCost >= 0 -> minPullCost
 			else -> 0
 		}
-
-	/**
-	 * Cross-stack disorder penalty: counts chunk elements in B that are smaller
-	 * than the maximum element of the confirmed ascending prefix in A. (a[[prefixLen] - 1])
-	 * Each such element requires at least 1 PA to restore ascending order,
-	 * making this a valid admissible lower bound.
-	 * Only applied when [Stack.prevChunkNum] is set (chunk 2 onwards).
-	 *
-	 * Time Complexity: O(k) -> k = B's size.
-	 * Space Complexity: O(1).
-	 *
-	 * @return Count of out-of-order chunk elements in B relative to prefix max.
-	 */
-	private fun crossStackDisorder(stack: Stack, prefixLen: Int): Int {
-		if (prefixLen == 0 || stack.b.isEmpty()) return 0
-		val prefixMax = stack.a[prefixLen - 1]
-		var count = 0
-		for (i in 0 until stack.b.size) {
-			if (stack.b[i] < prefixMax) count++
-		}
-		return count
-	}
-
-	/**
-	 * Prevents the heuristic from collapsing to near-zero when only a tiny
-	 * prefix is formed but most chunk elements are unresolved.
-	 * Trivially admissible, at least 1 more move is required if any remain.
-	 * Only applied when [Stack.prevChunkNum] is set (chunk 2 onwards).
-	 *
-	 * Time Complexity: O(m + k) -> m = A's size, k = B's size.
-	 * Space Complexity: O(1).
-	 *
-	 * @return 1 if any chunk elements remain outside the ascending
-	 * prefix (still in A's suffix or in B), 0 otherwise.
-	 */
-	private fun remainingChunkPenalty(stack: Stack, prefixLen: Int, chunkSize: Int): Int {
-		if (prefixLen >= chunkSize) return 0
-		for (i in prefixLen until stack.a.size) if (stack.a[i] in stack.chunk) return 1
-		for (i in 0 until stack.b.size) if (stack.b[i] in stack.chunk) return 1
-		return 0
-	}
-
-	/**
-	 * Future rotate bound: counts future elements above the current [Chunk.maxValue] in
-	 * A that appear after the prevChunk block. Each must be rotated past the eventual
-	 * goal position, requiring at least 1 move each -> admissible lower bound.
-	 * Skips leading prevChunk elements before counting.
-	 * Only applied when [Stack.prevChunkNum] is set (chunks 2 onwards).
-	 *
-	 * Time Complexity: O(m) -> m = A's size.
-	 * Space Complexity: O(1).
-	 *
-	 * @return Count of future elements after the prevChunk block.
-	 */
-	private fun futureRotateBound(stack: Stack): Int {
-		if (stack.prevChunkNum == null) return 0
-		var count = 0
-		var i = 0
-		while (i < stack.a.size && stack.a[i] <= stack.prevChunkNum!!) i++
-		while (i < stack.a.size) {
-			if (stack.a[i] > stack.chunk.maxValue) count++
-			i++
-		}
-		return count
-	}
 }

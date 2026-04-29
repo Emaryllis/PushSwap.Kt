@@ -36,7 +36,7 @@ class Stack(
 		b.clone(),
 		chunk,
 		prevChunkNum,
-		moves.clone(),
+		moves,
 		heuristic
 	)
 
